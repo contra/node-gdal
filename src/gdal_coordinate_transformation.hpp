@@ -47,39 +47,40 @@ private:
 
 // adapted from gdalwarp source
 
-class GeoTransformTransformer : public OGRCoordinateTransformation
-{
+class GeoTransformTransformer : public OGRCoordinateTransformation {
 public:
+    void* hSrcImageTransformer;
 
-    void         *hSrcImageTransformer;
+    virtual OGRSpatialReference* GetSourceCS() override { return nullptr; }
+    virtual OGRSpatialReference* GetTargetCS() override { return nullptr; }
 
-    virtual OGRSpatialReference *GetSourceCS() { return NULL; }
-    virtual OGRSpatialReference *GetTargetCS() { return NULL; }
-
-    virtual int Transform( int nCount,
-                           double *x, double *y, double *z = NULL ) {
+    virtual int Transform(int nCount,
+        double* x, double* y, double* z = NULL)
+    {
         int nResult;
 
-        int *pabSuccess = (int *) CPLCalloc(sizeof(int),nCount);
-        nResult = TransformEx( nCount, x, y, z, pabSuccess );
-        CPLFree( pabSuccess );
+        int* pabSuccess = (int*)CPLCalloc(sizeof(int), nCount);
+        nResult = Transform(nCount, x, y, z, pabSuccess);
+        CPLFree(pabSuccess);
 
         return nResult;
     }
 
-    virtual int TransformEx( int nCount,
-                             double *x, double *y, double *z = NULL,
-                             int *pabSuccess = NULL ) {
-        return GDALGenImgProjTransform( hSrcImageTransformer, TRUE,
-                                        nCount, x, y, z, pabSuccess );
+    int Transform(int nCount,
+        double* x, double* y, double* z,
+        int* pabSuccess)
+    {
+        return GDALGenImgProjTransform(hSrcImageTransformer, TRUE,
+            nCount, x, y, z, pabSuccess);
     }
 
-    virtual ~GeoTransformTransformer() {
-		if(hSrcImageTransformer){
-			GDALDestroyGenImgProjTransformer( hSrcImageTransformer );
-		}
+    virtual int Transform(int nCount,
+        double* x, double* y, double* z, double* /* t */,
+        int* pabSuccess) override
+    {
+        return GDALGenImgProjTransform(hSrcImageTransformer, TRUE,
+            nCount, x, y, z, pabSuccess);
     }
 };
-
 }
 #endif

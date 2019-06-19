@@ -1785,7 +1785,7 @@ GDALDatasetH GDALWarp( const char *pszDest, GDALDatasetH hDstDS, int nSrcCount,
                         printf( "Copying nodata values from source %s "
                                 "to destination %s.\n",
                                 GDALGetDescription(hSrcDS), pszDest );
-                    psWO->padfDstNoDataReal[i] = 
+                    psWO->padfDstNoDataReal[i] =
                         psWO->padfSrcNoDataReal[i];
 
                     if( i == 0 && psOptions->bCreateOutput &&

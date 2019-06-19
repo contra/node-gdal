@@ -13,7 +13,8 @@
 				"../gdal/ogr/ogrsf_frmts/idrisi/ogridrisidriver.cpp"
 			],
 			"include_dirs": [
-				"../gdal/ogr/ogrsf_frmts/idrisi"
+				"../gdal/ogr/ogrsf_frmts/idrisi",
+				"../gdal/frmts/idrisi"
 			]
 		}
 	]

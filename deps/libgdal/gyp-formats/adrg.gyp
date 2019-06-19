@@ -11,7 +11,8 @@
 				"../gdal/frmts/adrg/adrgdataset.cpp"
 			],
 			"include_dirs": [
-				"../gdal/frmts/adrg"
+				"../gdal/frmts/adrg",
+				"../gdal/frmts/iso8211"
 			]
 		}
 	]

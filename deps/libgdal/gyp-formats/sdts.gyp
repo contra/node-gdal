@@ -22,7 +22,8 @@
 				"../gdal/frmts/sdts/sdtstransfer.cpp"
 			],
 			"include_dirs": [
-				"../gdal/frmts/sdts"
+				"../gdal/frmts/sdts",
+				"../gdal/frmts/iso8211",
 			]
 		}
 	]

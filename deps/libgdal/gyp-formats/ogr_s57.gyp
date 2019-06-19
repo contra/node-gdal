@@ -19,7 +19,8 @@
 				"../gdal/ogr/ogrsf_frmts/s57/s57reader.cpp"
 			],
 			"include_dirs": [
-				"../gdal/ogr/ogrsf_frmts/s57"
+				"../gdal/ogr/ogrsf_frmts/s57",
+				"../gdal/frmts/iso8211"
 			]
 		}
 	]

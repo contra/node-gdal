@@ -26,10 +26,7 @@
 			"./gdal/ogr/ogrsf_frmts/vrt",
 			"./gdal/ogr/ogrsf_frmts/geojson",
 			"./gdal/ogr/ogrsf_frmts/geojson/libjson",
-			"./gdal/frmts/jpeg/libjpeg",
-			"./gdal/frmts/gtiff/libtiff",
-			"./gdal/frmts/iso8211",
-			"./gdal/third_party/LercLib",
+			"./gdal/frmts/jpeg/libjpeg"
 		],
 		"defines": [
 			"_LARGEFILE_SOURCE",

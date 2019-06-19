@@ -7,7 +7,7 @@
 			"target_name": "libgdal_ogr_ntf_frmt",
 			"type": "static_library",
 			"sources": [
-				"../gdal/ogr/ogrsf_frmts/ntf/ntfdump.cpp",
+				# "../gdal/ogr/ogrsf_frmts/ntf/ntfdump.cpp",
 				"../gdal/ogr/ogrsf_frmts/ntf/ogrntfdatasource.cpp",
 				"../gdal/ogr/ogrsf_frmts/ntf/ntffilereader.cpp",
 				"../gdal/ogr/ogrsf_frmts/ntf/ntf_codelist.cpp",

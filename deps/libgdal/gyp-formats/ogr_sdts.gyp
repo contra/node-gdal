@@ -12,7 +12,9 @@
 				"../gdal/ogr/ogrsf_frmts/sdts/ogrsdtsdriver.cpp"
 			],
 			"include_dirs": [
-				"../gdal/ogr/ogrsf_frmts/sdts"
+				"../gdal/ogr/ogrsf_frmts/sdts",
+				"../gdal/frmts/sdts",
+				"../gdal/frmts/iso8211"
 			]
 		}
 	]

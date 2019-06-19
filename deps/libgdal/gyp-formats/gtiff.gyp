@@ -71,7 +71,11 @@
 				"../gdal/frmts/gtiff/gt_overview.cpp"
 			],
 			"include_dirs": [
-				"../gdal/frmts/gtiff"
+				"../gdal/frmts/zlib",
+				"../gdal/frmts/gtiff",
+				"../gdal/frmts/gtiff/libtiff",
+				"../gdal/frmts/gtiff/libgeotiff",
+				"../gdal/third_party/LercLib"
 			]
 		}
 	]
