@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -40,35 +40,17 @@ public:
 	 * efficient to create a single PolygonExtracterFilter instance
 	 * and pass it to multiple geometries.
 	 */
-	static void getPolygons(const Geometry &geom, std::vector<const Polygon*>& ret)
-	{
-		PolygonExtracter pe(ret);
-		geom.apply_ro(&pe);
-	}
+	static void getPolygons(const Geometry &geom, std::vector<const Polygon*>& ret);
 
 	/**
 	 * Constructs a PolygonExtracterFilter with a list in which
 	 * to store Polygons found.
 	 */
-	PolygonExtracter(std::vector<const Polygon*>& newComps)
-		:
-		comps(newComps)
-		{}
+	PolygonExtracter(std::vector<const Polygon*>& newComps);
 
-	void filter_rw(Geometry *geom) {
-		if ( const Polygon *p=dynamic_cast<const Polygon *>(geom) )
-		{
-			comps.push_back(p);
-		}
-	}
+	void filter_rw(Geometry *geom) override;
 
-	void filter_ro(const Geometry *geom)
-	{
-		if ( const Polygon *p=dynamic_cast<const Polygon *>(geom) )
-		{
-			comps.push_back(p);
-		}
-	}
+	void filter_ro(const Geometry *geom) override;
 
 private:
 
@@ -76,8 +58,8 @@ private:
     std::vector<const Polygon*>& comps;
 
     // Declare type as noncopyable
-    PolygonExtracter(const PolygonExtracter& other);
-    PolygonExtracter& operator=(const PolygonExtracter& rhs);
+    PolygonExtracter(const PolygonExtracter& other) = delete;
+    PolygonExtracter& operator=(const PolygonExtracter& rhs) = delete;
 };
 
 } // namespace geos.geom.util

@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2005-2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -29,6 +29,7 @@
 #include <cassert>
 #include <string>
 #include <vector>
+#include <sstream>
 
 #ifndef GEOS_DEBUG
 #define GEOS_DEBUG 0
@@ -55,7 +56,7 @@ Coordinate&
 EdgeEndStar::getCoordinate()
 {
 	static Coordinate nullCoord(DoubleNotANumber, DoubleNotANumber, DoubleNotANumber);
-	if (edgeMap.size()==0) return nullCoord;
+	if (edgeMap.empty()) return nullCoord;
 
 	EdgeEndStar::iterator it=begin();
 	EdgeEnd *e=*it;
@@ -64,11 +65,18 @@ EdgeEndStar::getCoordinate()
 }
 
 /*public*/
+const Coordinate&
+EdgeEndStar::getCoordinate() const
+{
+	return const_cast<EdgeEndStar*>(this)->getCoordinate();
+}
+
+/*public*/
 EdgeEnd*
 EdgeEndStar::getNextCW(EdgeEnd *ee)
 {
 	EdgeEndStar::iterator it=find(ee);
-	if ( it==end() ) return NULL;
+	if ( it==end() ) return nullptr;
 	if ( it==begin() ) { it=end(); --it; }
 	else --it;
 	return *it;
@@ -100,7 +108,7 @@ EdgeEndStar::computeLabelling(std::vector<GeometryGraph*> *geomGraph)
 	 * In all other cases (e.g. the node is on a line, on a point, or
 	 * not on the geometry at all) the edge
 	 * has the location EXTERIOR for the geometry.
-	 * 
+	 *
 	 * Note that the edge cannot be on the BOUNDARY of the geometry,
 	 * since then there would have been a parallel edge from the
 	 * Geometry at this node also labelled BOUNDARY
@@ -207,13 +215,11 @@ EdgeEndStar::checkAreaLabelsConsistent(int geomIndex)
 	// the left side of the edge
 
 	// if no edges, trivially consistent
-	if (edgeMap.size()==0) return true;
+	if (edgeMap.empty()) return true;
 
 	// initialize startLoc to location of last L side (if any)
-	EdgeEndStar::reverse_iterator it=rbegin();
-
-	assert(*it);
-	const Label& startLabel = (*it)->getLabel();
+	assert(*rbegin());
+	const Label& startLabel = (*rbegin())->getLabel();
 	int startLoc = startLabel.getLocation(geomIndex, Position::LEFT);
 
 	// Found unlabelled area edge
@@ -338,18 +344,25 @@ EdgeEndStar::propagateSideLabels(int geomIndex)
 
 /*public*/
 std::string
-EdgeEndStar::print()
+EdgeEndStar::print() const
 {
-	std::string out="EdgeEndStar:   " + getCoordinate().toString()+"\n";
-	for (EdgeEndStar::iterator it=begin(), itEnd=end(); it!=itEnd; ++it)
+	std::ostringstream s;
+  s << *this;
+  return s.str();
+}
+
+std::ostream&
+operator<< (std::ostream& os, const EdgeEndStar& es)
+{
+	os << "EdgeEndStar:   " << es.getCoordinate() << "\n";
+	for (EdgeEndStar::const_iterator it=es.begin(), itEnd=es.end(); it!=itEnd; ++it)
 	{
-		EdgeEnd *e=*it;
+		const EdgeEnd *e=*it;
 		assert(e);
-		out+=e->print();
+		os << *e;
 	}
-	return out;
+	return os;
 }
 
 } // namespace geos.geomgraph
 } // namespace geos
-

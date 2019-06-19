@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  ***********************************************************************
@@ -50,7 +50,7 @@
 #include <functional>
 #include <vector>
 #include <sstream>
-#include <memory> // for auto_ptr
+#include <memory> // for unique_ptr
 
 #ifndef GEOS_DEBUG
 #define GEOS_DEBUG 0
@@ -117,7 +117,7 @@ OverlayOp::isResultOfOp(int loc0, int loc1, OverlayOp::OpCode opCode)
 		case opDIFFERENCE:
 			return loc0==Location::INTERIOR && loc1!=Location::INTERIOR;
 		case opSYMDIFFERENCE:
-			return (loc0==Location::INTERIOR && loc1!=Location::INTERIOR) 
+			return (loc0==Location::INTERIOR && loc1!=Location::INTERIOR)
 				|| (loc0!=Location::INTERIOR && loc1==Location::INTERIOR);
 	}
 	return false;
@@ -137,11 +137,11 @@ OverlayOp::OverlayOp(const Geometry *g0, const Geometry *g1)
 	 */
 	geomFact(g0->getFactory()),
 
-	resultGeom(NULL),
+	resultGeom(nullptr),
 	graph(OverlayNodeFactory::instance()),
-	resultPolyList(NULL),
-	resultLineList(NULL),
-	resultPointList(NULL)
+	resultPolyList(nullptr),
+	resultLineList(nullptr),
+	resultPointList(nullptr)
 
 {
 
@@ -190,20 +190,23 @@ OverlayOp::getResultGeometry(OverlayOp::OpCode funcCode)
 
 /*private*/
 void
-OverlayOp::insertUniqueEdges(vector<Edge*> *edges)
+OverlayOp::insertUniqueEdges(vector<Edge*> *edges, const Envelope *env)
 {
+  for(size_t i=0, n=edges->size(); i<n; ++i) {
+    Edge *e = (*edges)[i];
+		if ( env && ! env->intersects(e->getEnvelope()) ) {
+		  dupEdges.push_back(e); // or could it be deleted directly ?
+      continue;
+    }
+#if GEOS_DEBUG
+		cerr <<" "<< e->print() << endl;
+#endif
+    insertUniqueEdge(e);
+  }
+/*
 	for_each(edges->begin(), edges->end(),
 			bind1st(mem_fun(&OverlayOp::insertUniqueEdge), this));
-
-#if GEOS_DEBUG
-	cerr<<"OverlayOp::insertUniqueEdges("<<edges->size()<<"): "<<endl;
-	for(size_t i=0;i<edges->size();i++) {
-		Edge *e=(*edges)[i];
-		if ( ! e ) cerr <<" NULL"<<endl;
-		cerr <<" "<< e->print() << endl;
-	}
-#endif // GEOS_DEBUG
-
+*/
 }
 
 /*private*/
@@ -226,26 +229,46 @@ OverlayOp::replaceCollapsedEdges()
 
 			// should we keep this alive some more ?
 			delete e;
-		} 
+		}
 	}
 }
 
 /*private*/
 void
-OverlayOp::copyPoints(int argIndex)
+OverlayOp::copyPoints(int argIndex, const Envelope *env)
 {
+//#define GEOS_DEBUG_COPY_POINTS 1
+
+#ifdef GEOS_DEBUG_COPY_POINTS
+	int copied = 0;
+#endif
+
+	//env = 0; // WARNING: uncomment to disable env-optimization
+
+	// TODO: set env to null if it covers arg geometry envelope
+
 	NodeMap::container& nodeMap=arg[argIndex]->getNodeMap()->nodeMap;
 	for ( NodeMap::const_iterator it=nodeMap.begin(), itEnd=nodeMap.end();
 			it != itEnd; ++it )
 	{
 		Node* graphNode=it->second;
 		assert(graphNode);
+		const Coordinate &coord = graphNode->getCoordinate();
 
-		Node* newNode=graph.addNode(graphNode->getCoordinate());
+		if ( env && ! env->covers(coord) ) continue;
+
+#ifdef GEOS_DEBUG_COPY_POINTS
+		++copied;
+#endif
+		Node* newNode=graph.addNode(coord);
 		assert(newNode);
 
 		newNode->setLabel(argIndex, graphNode->getLabel().getLocation(argIndex));
 	}
+
+#ifdef GEOS_DEBUG_COPY_POINTS
+	cerr << "Copied " << copied << " nodes out of " << nodeMap.size() << " for geom " << argIndex << endl;
+#endif
 }
 
 /*private*/
@@ -402,6 +425,11 @@ OverlayOp::labelIncompleteNode(Node *n, int targetIndex)
 	 * by LineIntersector invoked by CGAlgorithms::isOnLine
 	 * invoked by PointLocator.
 	 */
+
+	// Only do this if input does have Z
+	// See https://trac.osgeo.org/geos/ticket/811
+	if(targetGeom->getCoordinateDimension() < 3 ) return;
+
 	const LineString *line = dynamic_cast<const LineString *>(targetGeom);
 	if ( loc == Location::INTERIOR && line )
 	{
@@ -490,7 +518,7 @@ OverlayOp::mergeZ(Node *n, const LineString *line) const
 	for(size_t i=1, size=pts->size(); i<size; ++i)
 	{
 		const Coordinate &p0=pts->getAt(i-1);
-		const Coordinate &p1=pts->getAt(i);	
+		const Coordinate &p1=pts->getAt(i);
 		li.computeIntersection(p, p0, p1);
 		if (li.hasIntersection())
 		{
@@ -636,7 +664,7 @@ OverlayOp::computeGeometry(vector<Point*> *nResultPointList,
 	geomList->insert(geomList->end(),
 			nResultPolyList->begin(),
 			nResultPolyList->end());
-			
+
 	// build the most specific geometry possible
 	Geometry *g=geomFact->buildGeometry(geomList);
 	return g;
@@ -648,17 +676,41 @@ OverlayOp::computeOverlay(OverlayOp::OpCode opCode)
 	//throw(TopologyException *)
 {
 
+	// Compute the target envelope
+	const Envelope *env = nullptr;
+	const Envelope *env0 = getArgGeometry(0)->getEnvelopeInternal();
+	const Envelope *env1 = getArgGeometry(1)->getEnvelopeInternal();
+	Envelope opEnv;
+	if ( resultPrecisionModel->isFloating() )
+	{
+		// Envelope-based optimization only works in floating precision
+		switch (opCode) {
+			case opINTERSECTION:
+				env0->intersection(*env1, opEnv);
+				env = &opEnv;
+				break;
+			case opDIFFERENCE:
+				opEnv = *env0;
+				env = &opEnv;
+				break;
+			default:
+				break;
+		}
+	}
+	//env = 0; // WARNING: uncomment to disable env-optimization
+
 	// copy points from input Geometries.
 	// This ensures that any Point geometries
 	// in the input are considered for inclusion in the result set
-	copyPoints(0);
-	copyPoints(1);
+	copyPoints(0, env);
+	copyPoints(1, env);
 
 	GEOS_CHECK_FOR_INTERRUPTS();
 
 	// node the input Geometries
-	delete arg[0]->computeSelfNodes(li,false);
-	delete arg[1]->computeSelfNodes(li,false);
+	delete arg[0]->computeSelfNodes(li, false, env);
+	GEOS_CHECK_FOR_INTERRUPTS();
+	delete arg[1]->computeSelfNodes(li, false, env);
 
 #if GEOS_DEBUG
 	cerr<<"OverlayOp::computeOverlay: computed SelfNodes"<<endl;
@@ -667,7 +719,7 @@ OverlayOp::computeOverlay(OverlayOp::OpCode opCode)
 	GEOS_CHECK_FOR_INTERRUPTS();
 
 	// compute intersections between edges of the two input geometries
-	delete arg[0]->computeEdgeIntersections(arg[1], &li,true);
+	delete arg[0]->computeEdgeIntersections(arg[1], &li, true, env);
 
 #if GEOS_DEBUG
 	cerr<<"OverlayOp::computeOverlay: computed EdgeIntersections"<<endl;
@@ -679,12 +731,13 @@ OverlayOp::computeOverlay(OverlayOp::OpCode opCode)
 
 	vector<Edge*> baseSplitEdges;
 	arg[0]->computeSplitEdges(&baseSplitEdges);
+	GEOS_CHECK_FOR_INTERRUPTS();
 	arg[1]->computeSplitEdges(&baseSplitEdges);
 
 	GEOS_CHECK_FOR_INTERRUPTS();
 
 	// add the noded edges to this result graph
-	insertUniqueEdges(&baseSplitEdges);
+	insertUniqueEdges(&baseSplitEdges, env);
 	computeLabelsFromDepths();
 	replaceCollapsedEdges();
 	//Debug.println(edgeList);
@@ -705,10 +758,13 @@ OverlayOp::computeOverlay(OverlayOp::OpCode opCode)
 	 */
   try
   {
+#ifdef GEOS_DEBUG_VALIDATION
+		cout << "EdgeNodingValidator about to evaluate " << edgeList.getEdges().size() << " edges" << endl;
+#endif
     // Will throw TopologyException if noding is
     // found to be invalid
     EdgeNodingValidator::checkValid(edgeList.getEdges());
-#ifdef GEOS_DEBUG_VALIDATION 
+#ifdef GEOS_DEBUG_VALIDATION
 		cout << "EdgeNodingValidator accepted the noding" << endl;
 #endif
   }
@@ -720,7 +776,7 @@ OverlayOp::computeOverlay(OverlayOp::OpCode opCode)
 
     // In the error scenario, the edgeList is not properly
     // deleted. Cannot add to the destructor of EdgeList
-    // (as it should) because 
+    // (as it should) because
     // "graph.addEdges(edgeList.getEdges());" below
     // takes over edgeList ownership in the success case.
     edgeList.clearList();
@@ -759,7 +815,7 @@ OverlayOp::computeOverlay(OverlayOp::OpCode opCode)
 	GEOS_CHECK_FOR_INTERRUPTS();
 
 	PolygonBuilder polyBuilder(geomFact);
-	
+
 	// might throw a TopologyException *
 	polyBuilder.add(&graph);
 
@@ -788,7 +844,7 @@ OverlayOp::computeOverlay(OverlayOp::OpCode opCode)
 #if USE_ELEVATION_MATRIX
 	elevationMatrix->elevate(resultGeom);
 #endif // USE_ELEVATION_MATRIX
-	
+
 }
 
 /*protected*/
@@ -855,9 +911,8 @@ OverlayOp::insertUniqueEdge(Edge *e)
 void
 OverlayOp::computeLabelsFromDepths()
 {
-	for(size_t j=0, s=edgeList.getEdges().size(); j<s; ++j)
+	for(auto &e : edgeList.getEdges())
 	{
-		Edge *e=edgeList.get(j);
 		Label& lbl = e->getLabel();
 		Depth &depth = e->getDepth();
 
@@ -906,7 +961,7 @@ struct PointCoveredByAny: public geom::CoordinateFilter
 		: geoms(nGeoms)
 	{}
 
-	void filter_ro(const Coordinate* coord)
+	void filter_ro(const Coordinate* coord) override
 	{
 		for (size_t i=0, n=geoms.size(); i<n; ++i)
 		{
@@ -924,8 +979,8 @@ struct PointCoveredByAny: public geom::CoordinateFilter
 
 private:
     // Declare type as noncopyable
-    PointCoveredByAny(const PointCoveredByAny& other);
-    PointCoveredByAny& operator=(const PointCoveredByAny& rhs);
+    PointCoveredByAny(const PointCoveredByAny& other) = delete;
+    PointCoveredByAny& operator=(const PointCoveredByAny& rhs) = delete;
 };
 
 void
@@ -957,7 +1012,7 @@ OverlayOp::checkObviouslyWrongResult(OverlayOp::OpCode opCode)
 		}
 	}
 
-	else if ( opCode == opDIFFERENCE 
+	else if ( opCode == opDIFFERENCE
 		&& arg[0]->getGeometry()->getDimension() == Dimension::A
 		&& arg[1]->getGeometry()->getDimension() == Dimension::A )
 	{

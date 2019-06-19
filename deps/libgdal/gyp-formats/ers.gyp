@@ -11,8 +11,7 @@
 				"../gdal/frmts/ers/ershdrnode.cpp"
 			],
 			"include_dirs": [
-				"../gdal/frmts/ers",
-				"../gdal/frmts/raw"
+				"../gdal/frmts/ers"
 			]
 		}
 	]

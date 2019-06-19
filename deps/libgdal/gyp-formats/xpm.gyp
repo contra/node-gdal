@@ -10,8 +10,7 @@
 				"../gdal/frmts/xpm/xpmdataset.cpp"
 			],
 			"include_dirs": [
-				"../gdal/frmts/xpm",
-				"../gdal/frmts/mem"
+				"../gdal/frmts/xpm"
 			]
 		}
 	]

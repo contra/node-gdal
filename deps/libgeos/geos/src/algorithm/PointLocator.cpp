@@ -8,18 +8,19 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
  *
- * Last port: algorithm/PointLocator.java r320 (JTS-1.12)
+ * Last port: algorithm/PointLocator.java 95fbe34b (JTS-1.15.2-SNAPSHOT)
  *
  **********************************************************************/
 
 #include <geos/algorithm/PointLocator.h>
 #include <geos/algorithm/CGAlgorithms.h>
 #include <geos/geom/Geometry.h>
+#include <geos/geom/Point.h>
 #include <geos/geom/LineString.h>
 #include <geos/geom/LinearRing.h>
 #include <geos/geom/MultiLineString.h>
@@ -61,8 +62,11 @@ PointLocator::locate(const Coordinate& p, const Geometry *geom)
 void
 PointLocator::computeLocation(const Coordinate& p, const Geometry *geom)
 {
-
-	if (const LineString *ls=dynamic_cast<const LineString*>(geom))
+	if (const Point *pt=dynamic_cast<const Point*>(geom))
+	{
+		updateLocationInfo(locate(p, pt));
+	}
+	else if (const LineString *ls=dynamic_cast<const LineString*>(geom))
 	{
 		updateLocationInfo(locate(p, ls));
 	}
@@ -111,8 +115,22 @@ PointLocator::updateLocationInfo(int loc)
 
 /* private */
 int
+PointLocator::locate(const Coordinate& p, const Point *pt)
+{
+	// no point in doing envelope test, since equality test is just as fast
+	const Coordinate *ptCoord = pt->getCoordinate();
+	if (ptCoord->equals2D(p))
+		return Location::INTERIOR;
+	return Location::EXTERIOR;
+}
+
+/* private */
+int
 PointLocator::locate(const Coordinate& p, const LineString *l)
 {
+	if (!l->getEnvelopeInternal()->intersects(p))
+		return Location::EXTERIOR;
+
 	const CoordinateSequence* pt=l->getCoordinatesRO();
 	if (! l->isClosed()) {
 		if ((p==pt->getAt(0)) || (p==pt->getAt(pt->getSize()-1))) {
@@ -128,11 +146,13 @@ PointLocator::locate(const Coordinate& p, const LineString *l)
 int
 PointLocator::locateInPolygonRing(const Coordinate& p, const LinearRing *ring)
 {
-	// can this test be folded into isPointInRing ?
+	if (!ring->getEnvelopeInternal()->intersects(p)) {
+		return Location::EXTERIOR;
+	}
 
 	const CoordinateSequence *cl = ring->getCoordinatesRO();
 
-	if (CGAlgorithms::isOnLine(p,cl)) 
+	if (CGAlgorithms::isOnLine(p,cl))
 		return Location::BOUNDARY;
 	if (CGAlgorithms::isPointInRing(p,cl))
 		return Location::INTERIOR;

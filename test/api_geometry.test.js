@@ -59,7 +59,7 @@ describe('gdal.Geometry', function() {
 	});
 	describe('toWKB()', function() {
 		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
+			var point2d = new gdal.Point(1, 2);
 			var wkb = point2d.toWKB();
 			var expected;
 			if (wkb[0] === 0) {
@@ -72,7 +72,7 @@ describe('gdal.Geometry', function() {
 	});
 	describe('toWKT()', function() {
 		it('should return valid result', function() {
-			var point2d = new gdal.Point(1,2);
+			var point2d = new gdal.Point(1, 2);
 			var wkt = point2d.toWKT();
 			assert.equal(wkt, 'POINT (1 2)');
 		});

@@ -5,7 +5,7 @@ set -eu
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/libgdal"
 
-GDAL_VERSION=2.1.1
+GDAL_VERSION=3.0.0
 dir_gdal=./gdal
 dir_formats_gyp=./gyp-formats
 dir_gyp_templates=./gyp-templates
@@ -20,7 +20,6 @@ if [[ ! -f gdal-${GDAL_VERSION}.tar.gz ]]; then
 fi
 tar -xzf gdal-${GDAL_VERSION}.tar.gz
 mv gdal-${GDAL_VERSION} $dir_gdal
-
 rm -rf $dir_gdal/wince
 rm -rf $dir_gdal/swig
 rm -rf $dir_gdal/vb6
@@ -72,16 +71,20 @@ rm -rf $dir_gdal/*/*/*/*.m4
 rm -rf $dir_gdal/*/*/*/*.dist
 rm -f $dir_gdal/config*
 rm -f $dir_gdal/Doxyfile
+rm -f $dir_gdal/DoxygenLayout.xml
 rm -f $dir_gdal/GNUmakefile
 rm -f $dir_gdal/makefile.vc
 rm -f $dir_gdal/aclocal.m4
 rm -f $dir_gdal/NEWS
-rm -f $dir_gdal/COMMITERS*
+rm -f $dir_gdal/COMMITTERS*
 rm -f $dir_gdal/PERFORMANCE*
 rm -f $dir_gdal/PROVENANCE*
 rm -f $dir_gdal/MIGRATION_GUIDE*
 rm -f $dir_gdal/HOWTO-RELEASE*
 rm -f $dir_gdal/Vagrantfile
+rm -rf $dir_gdal/fuzzers
+rm -rf $dir_gdal/ci
+rm -rf $dir_gdal/docker
 
 #
 # apply patches
@@ -95,7 +98,7 @@ patch gdal/ogr/ogrsf_frmts/shape/shpopen.c < patches/ogrsf_frmts_shape_shpopenc.
 patch gdal/ogr/ogrsf_frmts/shape/dbfopen.c < patches/ogrsf_frmts_shape_dbfopen.diff
 patch gdal/ogr/ogrsf_frmts/shape/sbnsearch.c < patches/ogrsf_frmts_shape_sbnsearch.diff
 patch gdal/frmts/blx/blx.c < patches/frmts_blx_blxc.diff # missing cpl_port.h
-
+patch gdal/frmts/sdts/sdts2shp.cpp < patches/frmts_sdts_switches.diff # bad syntax
 
 #
 # create format gyps
@@ -163,11 +166,12 @@ function generate_formats() {
 		format_target_name=$(wrap_string "$target_name")
 
 		dir_format="${directory}/${fmt}"
+		relative_dir_format=`echo ${dir_format} | awk '{print "." $0}'`
 		files_src=`find ${dir_format} | egrep '\.(c|cpp)$' | awk '{print "." $0}'`
 		gyp_template="${format_gyp_template}"
 
 		format_sources=$(wrap_array "$files_src" 4)
-		format_include_dirs=$(wrap_string "$dir_format")
+		format_include_dirs=$(wrap_string "$relative_dir_format")
 
 		if [[ ! -f "$file_gyp" ]]; then
 			echo "Defining target: $format_target_name (\"$file_gyp\")"

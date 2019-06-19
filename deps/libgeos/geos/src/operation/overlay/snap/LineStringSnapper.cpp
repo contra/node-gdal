@@ -3,19 +3,19 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2009-2010  Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2009-2010  Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2006 Refractions Research Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  ***********************************************************************
  *
  * Last port: operation/overlay/snap/LineStringSnapper.java r320 (JTS-1.12)
  *
- * NOTE: algorithm changed to improve output quality by reducing 
+ * NOTE: algorithm changed to improve output quality by reducing
  *       probability of self-intersections
  *
  **********************************************************************/
@@ -26,6 +26,7 @@
 #include <geos/geom/CoordinateList.h>
 #include <geos/util/UniqueCoordinateArrayFilter.h>
 #include <geos/geom/LineSegment.h>
+#include <geos/util/Interrupt.h>
 
 #include <vector>
 #include <memory>
@@ -50,7 +51,7 @@ namespace overlay { // geos.operation.overlay
 namespace snap { // geos.operation.overlay.snap
 
 /*public*/
-std::auto_ptr<Coordinate::Vect>
+std::unique_ptr<Coordinate::Vect>
 LineStringSnapper::snapTo(const geom::Coordinate::ConstVect& snapPts)
 {
 	geom::CoordinateList coordList(srcPts);
@@ -125,6 +126,7 @@ cerr << "Snapping vertices of: " << srcCoords << endl;
 			it != end;
 			++it)
 	{
+	    GEOS_CHECK_FOR_INTERRUPTS();
 		assert(*it);
 		const Coordinate& snapPt = *(*it);
 
@@ -153,13 +155,20 @@ cerr << " Vertex to be snapped found, snapping" << endl;
     if (vertpos == srcCoords.begin() && isClosed)
     {
       vertpos = srcCoords.end(); --vertpos;
+#if GEOS_DEBUG
+cerr << " Snapped vertex was first in a closed line, also snapping last" << endl;
+#endif
       *vertpos = snapPt;
     }
+
+#if GEOS_DEBUG
+cerr << " After snapping of vertex " << snapPt << ", srcCoors are: " << srcCoords << endl;
+#endif
 
 	}
 
 #if GEOS_DEBUG
-cerr << " After vertex snapping, srcCoors are: " << srcCoords << endl;
+cerr << " After vertices snapping, srcCoors are: " << srcCoords << endl;
 #endif
 
 }
@@ -221,6 +230,8 @@ LineStringSnapper::snapSegments(geom::CoordinateList& srcCoords,
   // nothing to do if there are no source coords..
   if ( srcCoords.empty() ) return;
 
+	GEOS_CHECK_FOR_INTERRUPTS();
+
 #if GEOS_DEBUG
 cerr << "Snapping segments of: " << srcCoords << endl;
 #endif
@@ -270,7 +281,7 @@ cerr << " No segment to snap" << endl;
       *to = seg.p1 = snapPt;
       // now snap from-to (segpos) or to-next (segpos++) to newSnapPt
       if ( to == too_far ) {
-        if ( isClosed ) { 
+        if ( isClosed ) {
 #if GEOS_DEBUG
           cerr << " His end point is the last one, but is closed " << endl;
 #endif
@@ -309,7 +320,7 @@ cerr << " No segment to snap" << endl;
       *segpos = seg.p0 = snapPt;
       // now snap prev-from (--segpos) or from-to (segpos) to newSnapPt
       if ( segpos == srcCoords.begin() ) {
-        if ( isClosed ) { 
+        if ( isClosed ) {
 #if GEOS_DEBUG
           cerr << " His start point is the first one, but is closed " << endl;
 #endif
@@ -333,9 +344,11 @@ cerr << " Before seg-snapping, srcCoors are: " << srcCoords << endl;
       LineSegment prevSeg(*segpos, seg.p0);
       if ( prevSeg.distance(newSnapPt) < seg.distance(newSnapPt) ) {
 #if GEOS_DEBUG
-        cerr << " Prev segment closer, inserting " << newSnapPt << " into " << prevSeg << endl;
+        cerr << " Prev segment closer, inserting " << newSnapPt << " into "
+             << prevSeg << endl;
 #endif
         // insert into prev segment
+        ++segpos;
         srcCoords.insert(segpos, newSnapPt);
       } else {
 #if GEOS_DEBUG
@@ -378,7 +391,7 @@ LineStringSnapper::findSegmentToSnap(
 	// TODO: use std::find_if
 	for ( ; from != too_far; ++from)
 	{
-		seg.p0 = *from; 
+		seg.p0 = *from;
 		CoordinateList::iterator to = from;
 		++to;
 		seg.p1 = *to;

@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -60,10 +60,10 @@ namespace io { // geos.io
 Geometry *
 WKTReader::read(const string &wellKnownText)
 {
-	//auto_ptr<StringTokenizer> tokenizer(new StringTokenizer(wellKnownText));
+	//unique_ptr<StringTokenizer> tokenizer(new StringTokenizer(wellKnownText));
         CLocalizer clocale;
 	StringTokenizer tokenizer(wellKnownText);
-	Geometry *g=NULL;
+	Geometry *g=nullptr;
 	g=readGeometryTaggedText(&tokenizer);
 	return g;
 }
@@ -74,8 +74,8 @@ WKTReader::getCoordinates(StringTokenizer *tokenizer)
 	size_t dim;
 	string nextToken=getNextEmptyOrOpener(tokenizer);
 	if (nextToken=="EMPTY") {
-		return geometryFactory->getCoordinateSequenceFactory()->create(NULL);
-		//new CoordinateArraySequence(); 
+		return geometryFactory->getCoordinateSequenceFactory()->create();
+		//new CoordinateArraySequence();
 	}
 
 	Coordinate coord;
@@ -99,8 +99,9 @@ WKTReader::getCoordinates(StringTokenizer *tokenizer)
 	return coordinates;
 }
 
+
 void
-WKTReader::getPreciseCoordinate(StringTokenizer *tokenizer, 
+WKTReader::getPreciseCoordinate(StringTokenizer *tokenizer,
                                 Coordinate& coord,
                                 size_t &dim )
 {
@@ -109,9 +110,9 @@ WKTReader::getPreciseCoordinate(StringTokenizer *tokenizer,
 	if (isNumberNext(tokenizer)) {
 		coord.z=getNextNumber(tokenizer);
 		dim = 3;
-        
+
         // If there is a fourth value (M) read and discard it.
-        if (isNumberNext(tokenizer)) 
+        if (isNumberNext(tokenizer))
             getNextNumber(tokenizer);
 
 	} else {
@@ -156,9 +157,9 @@ WKTReader::getNextEmptyOrOpener(StringTokenizer *tokenizer)
 {
 	string nextWord=getNextWord(tokenizer);
 
-    // Skip the Z, M or ZM of an SF1.2 3/4 dim coordinate. 
-    if (nextWord == "Z" || nextWord == "M" || nextWord == "ZM" )
-        nextWord = getNextWord(tokenizer);
+	// Skip the Z, M or ZM of an SF1.2 3/4 dim coordinate.
+	if (nextWord == "Z" || nextWord == "M" || nextWord == "ZM" )
+		nextWord = getNextWord(tokenizer);
 
 	if (nextWord=="EMPTY" || nextWord=="(") {
 		return nextWord;
@@ -200,7 +201,7 @@ WKTReader::getNextWord(StringTokenizer *tokenizer)
 		case StringTokenizer::TT_WORD:
         {
             string word = tokenizer->getSVal();
-            int i = word.size();
+            int i = static_cast<int>(word.size());
 
             while( --i >= 0 )
             {
@@ -290,7 +291,7 @@ WKTReader::readMultiPointText(StringTokenizer *tokenizer)
 		// Try to parse deprecated form "MULTIPOINT(0 0, 1 1)"
 		const CoordinateSequenceFactory* csf = \
 			geometryFactory->getCoordinateSequenceFactory();
-		CoordinateSequence *coords = csf->create(NULL);
+		CoordinateSequence *coords = csf->create();
 		try {
 			do {
 				Coordinate coord;
@@ -320,7 +321,7 @@ WKTReader::readMultiPointText(StringTokenizer *tokenizer)
 			} while(nextToken == ",");
 			return geometryFactory->createMultiPoint(points);
 		} catch (...) {
-			// clean up 
+			// clean up
 			for (size_t i=0; i<points->size(); i++)
 			{
 				delete (*points)[i];
@@ -330,7 +331,7 @@ WKTReader::readMultiPointText(StringTokenizer *tokenizer)
 		}
 	}
 
-	else 
+	else
 	{
 		stringstream err;
 		err << "Unexpected token: ";
@@ -367,11 +368,11 @@ WKTReader::readMultiPointText(StringTokenizer *tokenizer)
 Polygon*
 WKTReader::readPolygonText(StringTokenizer *tokenizer)
 {
-	Polygon *poly=NULL;
-	LinearRing *shell=NULL;
+	Polygon *poly=nullptr;
+	LinearRing *shell=nullptr;
 	string nextToken=getNextEmptyOrOpener(tokenizer);
 	if (nextToken=="EMPTY") {
-		return geometryFactory->createPolygon(NULL,NULL);
+		return geometryFactory->createPolygon(nullptr,nullptr);
 	}
 
 	vector<Geometry *> *holes=new vector<Geometry *>();
@@ -397,16 +398,26 @@ WKTReader::readPolygonText(StringTokenizer *tokenizer)
 MultiLineString* WKTReader::readMultiLineStringText(StringTokenizer *tokenizer) {
 	string nextToken=getNextEmptyOrOpener(tokenizer);
 	if (nextToken=="EMPTY") {
-		return geometryFactory->createMultiLineString(NULL);
+		return geometryFactory->createMultiLineString(nullptr);
 	}
 	vector<Geometry *> *lineStrings=new vector<Geometry *>();
-	LineString *lineString=readLineStringText(tokenizer);
-	lineStrings->push_back(lineString);
-	nextToken=getNextCloserOrComma(tokenizer);
-	while(nextToken==",") {
-		LineString *lineString=readLineStringText(tokenizer);
+	LineString *lineString = nullptr;
+	try {
+		lineString=readLineStringText(tokenizer);
 		lineStrings->push_back(lineString);
+		lineString=nullptr;
 		nextToken=getNextCloserOrComma(tokenizer);
+		while(nextToken==",") {
+			lineString=readLineStringText(tokenizer);
+			lineStrings->push_back(lineString);
+			lineString=nullptr;
+			nextToken=getNextCloserOrComma(tokenizer);
+		}
+	} catch (...) {
+		for (size_t i=0; i < lineStrings->size(); i++)
+			delete (*lineStrings)[i];
+		delete lineStrings;
+		throw;
 	}
 	MultiLineString *ret = geometryFactory->createMultiLineString(lineStrings);
 	//for (int i=0; i<lineStrings->size(); i++) delete (*lineStrings)[i];
@@ -417,16 +428,26 @@ MultiLineString* WKTReader::readMultiLineStringText(StringTokenizer *tokenizer) 
 MultiPolygon* WKTReader::readMultiPolygonText(StringTokenizer *tokenizer) {
 	string nextToken=getNextEmptyOrOpener(tokenizer);
 	if (nextToken=="EMPTY") {
-		return geometryFactory->createMultiPolygon(NULL);
+		return geometryFactory->createMultiPolygon(nullptr);
 	}
 	vector<Geometry *> *polygons=new vector<Geometry *>();
-	Polygon *polygon=readPolygonText(tokenizer);
-	polygons->push_back(polygon);
-	nextToken=getNextCloserOrComma(tokenizer);
-	while(nextToken==",") {
-		Polygon *polygon=readPolygonText(tokenizer);
+	Polygon *polygon = nullptr;
+	try {
+		polygon=readPolygonText(tokenizer);
 		polygons->push_back(polygon);
+		polygon=nullptr;
 		nextToken=getNextCloserOrComma(tokenizer);
+		while(nextToken==",") {
+			polygon=readPolygonText(tokenizer);
+			polygons->push_back(polygon);
+			polygon=nullptr;
+			nextToken=getNextCloserOrComma(tokenizer);
+		}
+	} catch (...) {
+		for (size_t i=0; i < polygons->size(); i++)
+			delete (*polygons)[i];
+		delete polygons;
+		throw;
 	}
 	MultiPolygon *ret = geometryFactory->createMultiPolygon(polygons);
 	//for (int i=0; i<polygons->size(); i++) delete (*polygons)[i];
@@ -437,17 +458,26 @@ MultiPolygon* WKTReader::readMultiPolygonText(StringTokenizer *tokenizer) {
 GeometryCollection* WKTReader::readGeometryCollectionText(StringTokenizer *tokenizer) {
 	string nextToken=getNextEmptyOrOpener(tokenizer);
 	if (nextToken=="EMPTY") {
-		return geometryFactory->createGeometryCollection(NULL);
+		return geometryFactory->createGeometryCollection(nullptr);
 	}
 	vector<Geometry *> *geoms=new vector<Geometry *>();
-	Geometry *geom;
-	geom=readGeometryTaggedText(tokenizer);
-	geoms->push_back(geom);
-	nextToken=getNextCloserOrComma(tokenizer);
-	while(nextToken==",") {
+	Geometry *geom=nullptr;
+	try {
 		geom=readGeometryTaggedText(tokenizer);
 		geoms->push_back(geom);
+		geom=nullptr;
 		nextToken=getNextCloserOrComma(tokenizer);
+		while(nextToken==",") {
+			geom=readGeometryTaggedText(tokenizer);
+			geoms->push_back(geom);
+			geom=nullptr;
+			nextToken=getNextCloserOrComma(tokenizer);
+		}
+	} catch (...) {
+		for (size_t i=0; i < geoms->size(); i++)
+			delete (*geoms)[i];
+		delete geoms;
+		throw;
 	}
 	GeometryCollection *ret = geometryFactory->createGeometryCollection(geoms);
 	//for (int i=0; i<geoms->size(); i++) delete (*geoms)[i];

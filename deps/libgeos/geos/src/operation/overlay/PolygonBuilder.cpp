@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -21,6 +21,7 @@
 #include <geos/operation/overlay/OverlayOp.h>
 #include <geos/operation/overlay/MaximalEdgeRing.h>
 #include <geos/operation/overlay/MinimalEdgeRing.h>
+#include <geos/operation/polygonize/EdgeRing.h>
 #include <geos/geomgraph/Node.h>
 #include <geos/geomgraph/NodeMap.h>
 #include <geos/geomgraph/DirectedEdgeStar.h>
@@ -43,7 +44,6 @@ using namespace std;
 using namespace geos::geomgraph;
 using namespace geos::algorithm;
 using namespace geos::geom;
-
 
 namespace geos {
 namespace operation { // geos.operation
@@ -74,7 +74,7 @@ PolygonBuilder::add(PlanarGraph *graph)
 
 	size_t eeSize=ee.size();
 
-#if GEOS_DEBUG 
+#if GEOS_DEBUG
 	cerr << __FUNCTION__ << ": PlanarGraph has " << eeSize << " EdgeEnds" << endl;
 #endif
 
@@ -146,14 +146,14 @@ PolygonBuilder::buildMaximalEdgeRings(const vector<DirectedEdge*> *dirEdges,
 		DirectedEdge *de=(*dirEdges)[i];
 #if GEOS_DEBUG
 	cerr << "  dirEdge " << i << endl
-	     << de->printEdge() << endl
-	     << " inResult:" << de->isInResult() << endl
-	     << " isArea:" << de->getLabel()->isArea() << endl;
+		 << de->printEdge() << endl
+		 << " inResult:" << de->isInResult() << endl
+		 << " isArea:" << de->getLabel().isArea() << endl;
 #endif
 		if (de->isInResult() && de->getLabel().isArea())
 		{
 			// if this edge has not yet been processed
-			if (de->getEdgeRing() == NULL)
+			if (de->getEdgeRing() == nullptr)
 			{
 				MaximalEdgeRing *er;
 	try
@@ -199,7 +199,7 @@ PolygonBuilder::buildMinimalEdgeRings(
 			// at this point we can go ahead and attempt to place
 			// holes, if this EdgeRing is a polygon
 			EdgeRing *shell=findShell(&minEdgeRings);
-			if(shell != NULL)
+			if(shell != nullptr)
 			{
 				placePolygonHoles(shell, &minEdgeRings);
 				newShellList.push_back(shell);
@@ -224,7 +224,7 @@ EdgeRing*
 PolygonBuilder::findShell(vector<MinimalEdgeRing*> *minEdgeRings)
 {
 	int shellCount=0;
-	EdgeRing *shell=NULL;
+	EdgeRing *shell=nullptr;
 
 #if GEOS_DEBUG
 	cerr<<"PolygonBuilder::findShell got "<<minEdgeRings->size()<<" minEdgeRings"<<endl;
@@ -292,9 +292,9 @@ PolygonBuilder::placeFreeHoles(std::vector<EdgeRing*>& newShellList,
 	{
 		EdgeRing *hole=*it;
 		// only place this hole if it doesn't yet have a shell
-		if (hole->getShell()==NULL) {
+		if (hole->getShell()==nullptr) {
 			EdgeRing *shell=findEdgeRingContaining(hole, newShellList);
-			if ( shell == NULL )
+			if ( shell == nullptr )
 			{
 #if GEOS_DEBUG
 				Geometry* geom;
@@ -305,14 +305,14 @@ PolygonBuilder::placeFreeHoles(std::vector<EdgeRing*>& newShellList,
 				{
 					geom = (*rIt)->toPolygon(geometryFactory);
 					std::cerr << "INSERT INTO shells VALUES ('"
-					          << *geom
-					          << "');" << std::endl;
+							  << *geom
+							  << "');" << std::endl;
 					delete geom;
 				}
 				geom = hole->toPolygon(geometryFactory);
 				std::cerr << "INSERT INTO hole VALUES ('"
-				          << *geom
-				          << "');" << std::endl;
+						  << *geom
+						  << "');" << std::endl;
 				delete geom;
 #endif
 				//assert(shell!=NULL); // unable to assign hole to a shell
@@ -331,30 +331,33 @@ PolygonBuilder::findEdgeRingContaining(EdgeRing *testEr,
 {
 	LinearRing *testRing=testEr->getLinearRing();
 	const Envelope *testEnv=testRing->getEnvelopeInternal();
-	const Coordinate& testPt=testRing->getCoordinateN(0);
-	EdgeRing *minShell=NULL;
-	const Envelope *minEnv=NULL;
-	for(size_t i=0, n=newShellList.size(); i<n; i++)
+	EdgeRing *minShell=nullptr;
+	const Envelope *minShellEnv=nullptr;
+
+	for(auto const& tryShell: newShellList)
 	{
-		LinearRing *lr=NULL;
-		EdgeRing *tryShell=newShellList[i];
-		LinearRing *tryRing=tryShell->getLinearRing();
-		const Envelope *tryEnv=tryRing->getEnvelopeInternal();
-		if (minShell!=NULL) {
-			lr=minShell->getLinearRing();
-			minEnv=lr->getEnvelopeInternal();
-		}
-		bool isContained=false;
-		const CoordinateSequence *rcl = tryRing->getCoordinatesRO();
-		if (tryEnv->contains(testEnv)
-			&& CGAlgorithms::isPointInRing(testPt,rcl))
-				isContained=true;
+		LinearRing *tryShellRing = tryShell->getLinearRing();
+		const Envelope *tryShellEnv=tryShellRing->getEnvelopeInternal();
+		// hole must be contained in shell
+		// the hole envelope cannot equal the shell envelope
+		// (also guards against testing rings against themselves)
+		if (tryShellEnv->equals(testEnv)) continue;
+		// hole must be contained in shell
+		if (!tryShellEnv->contains(testEnv)) continue;
+		const CoordinateSequence *tsrcs = tryShellRing->getCoordinatesRO();
+		Coordinate testPt = geos::operation::polygonize::EdgeRing::ptNotInList(testRing->getCoordinatesRO(), tsrcs);
+
+		bool isContained = false;
+		if (CGAlgorithms::locatePointInRing(testPt, *tsrcs) != Location::EXTERIOR)
+			isContained = true;
+
 		// check if this new containing ring is smaller than
 		// the current minimum ring
 		if (isContained) {
-			if (minShell==NULL
-				|| minEnv->contains(tryEnv)) {
-					minShell=tryShell;
+			if (minShell==nullptr ||
+			    minShellEnv->contains(tryShellEnv)) {
+				minShell = tryShell;
+				minShellEnv = minShell->getLinearRing()->getEnvelopeInternal();
 			}
 		}
 	}

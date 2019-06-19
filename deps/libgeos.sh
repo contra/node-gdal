@@ -5,7 +5,7 @@ set -eu
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/libgeos"
 
-GEOS_VERSION=3.4.2
+GEOS_VERSION=3.7.2
 dir_geos=./geos
 
 #
@@ -123,8 +123,3 @@ patch $dir_geos/src/operation/buffer/BufferOp.cpp < patches/BufferOp_minmax.diff
 patch $dir_geos/src/operation/buffer/OffsetCurveSetBuilder.cpp < patches/OffsetCurveSetBuilder_minmax.diff
 patch $dir_geos/include/geos/index/strtree/SIRtree.h < patches/SIRtree_minmax.diff
 patch $dir_geos/include/geos/index/intervalrtree/IntervalRTreeBranchNode.h < patches/IntervalRTreeBranchNode_minmax.diff
-
-patch $dir_geos/src/operation/buffer/OffsetCurveSetBuilder.cpp < patches/OffsetCurveSetBuilder_algorithm.diff
-patch $dir_geos/src/geom/LineSegment.cpp < patches/LineSegment_algorithm.diff
-patch $dir_geos/src/algorithm/LineIntersector.cpp < patches/LineIntersector_algorithm.diff
-patch $dir_geos/src/io/WKTWriter.cpp < patches/WKTWriter_algorithm.diff

@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2009 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2009 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2005-2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -22,7 +22,7 @@
 #include <geos/geom/LineString.h> // for toGeometry
 #include <geos/geom/Coordinate.h>
 #include <geos/geom/CoordinateSequence.h>
-#include <geos/geom/GeometryFactory.h> 
+#include <geos/geom/GeometryFactory.h>
 #include <geos/geom/CoordinateArraySequence.h> // should we really be using this?
 #include <geos/algorithm/CGAlgorithms.h>
 #include <geos/algorithm/LineIntersector.h>
@@ -32,9 +32,9 @@
 #include <geos/profiler.h>
 #include <geos/inline.h>
 
+#include <algorithm> // for max
 #include <sstream>
 #include <cmath>
-#include <algorithm>
 
 #ifndef GEOS_INLINE
 # include <geos/geom/LineSegment.inl>
@@ -169,10 +169,10 @@ LineSegment::orientationIndex(const LineSegment& seg) const
 	int orient1 = algorithm::CGAlgorithms::orientationIndex(p0, p1, seg.p1);
 	// this handles the case where the points are L or collinear
 	if (orient0 >= 0 && orient1 >= 0)
-		return max(orient0, orient1);
+		return std::max(orient0, orient1);
 	// this handles the case where the points are R or collinear
 	if (orient0 <= 0 && orient1 <= 0)
-		return max(orient0, orient1);
+        return std::max(orient0, orient1);
 	// points lie on opposite sides ==> indeterminate orientation
 	return 0;
 }
@@ -213,7 +213,7 @@ LineSegment::closestPoints(const LineSegment& line)
 		closestPt->setAt(close01,0);
 		closestPt->setAt(line.p1,1);
 		//(*cv)[0] = close01;
-		//(*cv)[1] = line.p1; 
+		//(*cv)[1] = line.p1;
 	}
 
 	Coordinate close10;
@@ -303,13 +303,13 @@ LineSegment::pointAlongOffset(double segmentLengthFraction,
 }
 
 /* public */
-std::auto_ptr<LineString>
+std::unique_ptr<LineString>
 LineSegment::toGeometry(const GeometryFactory& gf) const
 {
 	CoordinateSequence *cl=new CoordinateArraySequence();
 	cl->add(p0);
 	cl->add(p1);
-	return std::auto_ptr<LineString>(
+	return std::unique_ptr<LineString>(
 		gf.createLineString(cl) // ownership transferred
 	);
 }

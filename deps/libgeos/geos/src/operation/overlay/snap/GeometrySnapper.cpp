@@ -3,12 +3,12 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2009-2010  Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2009-2010  Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2006 Refractions Research Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  ***********************************************************************
@@ -42,7 +42,7 @@ namespace operation { // geos.operation
 namespace overlay { // geos.operation.overlay
 namespace snap { // geos.operation.overlay.snap
 
-const double GeometrySnapper::snapPrecisionFactor = 1e-9; 
+const double GeometrySnapper::snapPrecisionFactor = 1e-9;
 
 class SnapTransformer: public geos::geom::util::GeometryTransformer {
 
@@ -52,18 +52,18 @@ private:
 
 	const Coordinate::ConstVect& snapPts;
 
-	CoordinateSequence::AutoPtr snapLine(
+	CoordinateSequence::Ptr snapLine(
 			const CoordinateSequence* srcPts)
 	{
-		using std::auto_ptr;
+		using std::unique_ptr;
 
 		assert(srcPts);
 		assert(srcPts->toVector());
 		LineStringSnapper snapper(*(srcPts->toVector()), snapTol);
-		auto_ptr<Coordinate::Vect> newPts = snapper.snapTo(snapPts);
+		unique_ptr<Coordinate::Vect> newPts = snapper.snapTo(snapPts);
 
 		const CoordinateSequenceFactory* cfact = factory->getCoordinateSequenceFactory();
-		return auto_ptr<CoordinateSequence>(cfact->create(newPts.release()));
+		return unique_ptr<CoordinateSequence>(cfact->create(newPts.release()));
 	}
 
 public:
@@ -76,9 +76,9 @@ public:
 	{
 	}
 
-	CoordinateSequence::AutoPtr transformCoordinates(
+	CoordinateSequence::Ptr transformCoordinates(
 			const CoordinateSequence* coords,
-			const Geometry* parent)
+			const Geometry* parent) override
 	{
         ::geos::ignore_unused_variable_warning(parent);
 		return snapLine(coords);
@@ -88,10 +88,10 @@ public:
 };
 
 /*private*/
-std::auto_ptr<Coordinate::ConstVect>
+std::unique_ptr<Coordinate::ConstVect>
 GeometrySnapper::extractTargetCoordinates(const Geometry& g)
 {
-	std::auto_ptr<Coordinate::ConstVect> snapPts(new Coordinate::ConstVect());
+	std::unique_ptr<Coordinate::ConstVect> snapPts(new Coordinate::ConstVect());
 	util::UniqueCoordinateArrayFilter filter(*snapPts);
 	g.apply_ro(&filter);
 	// integrity check
@@ -100,39 +100,39 @@ GeometrySnapper::extractTargetCoordinates(const Geometry& g)
 }
 
 /*public*/
-std::auto_ptr<geom::Geometry>
+std::unique_ptr<geom::Geometry>
 GeometrySnapper::snapTo(const geom::Geometry& g, double snapTolerance)
 {
 
-	using std::auto_ptr;
+	using std::unique_ptr;
 	using geom::util::GeometryTransformer;
-	
+
 	// Get snap points
-	auto_ptr<Coordinate::ConstVect> snapPts=extractTargetCoordinates(g);
+	unique_ptr<Coordinate::ConstVect> snapPts=extractTargetCoordinates(g);
 
 	// Apply a SnapTransformer to source geometry
 	// (we need a pointer for dynamic polymorphism)
-	auto_ptr<GeometryTransformer> snapTrans(new SnapTransformer(snapTolerance, *snapPts));
+	unique_ptr<GeometryTransformer> snapTrans(new SnapTransformer(snapTolerance, *snapPts));
 	return snapTrans->transform(&srcGeom);
 }
 
 /*public*/
-std::auto_ptr<geom::Geometry>
+std::unique_ptr<geom::Geometry>
 GeometrySnapper::snapToSelf(double snapTolerance, bool cleanResult)
 {
 
-	using std::auto_ptr;
+	using std::unique_ptr;
 	using geom::util::GeometryTransformer;
-	
+
 	// Get snap points
-	auto_ptr<Coordinate::ConstVect> snapPts=extractTargetCoordinates(srcGeom);
+	unique_ptr<Coordinate::ConstVect> snapPts=extractTargetCoordinates(srcGeom);
 
 	// Apply a SnapTransformer to source geometry
 	// (we need a pointer for dynamic polymorphism)
-	auto_ptr<GeometryTransformer> snapTrans(new SnapTransformer(snapTolerance, *snapPts));
+	unique_ptr<GeometryTransformer> snapTrans(new SnapTransformer(snapTolerance, *snapPts));
 
 	GeomPtr result = snapTrans->transform(&srcGeom);
-	
+
 	if (cleanResult && ( dynamic_cast<const Polygon*>(result.get()) ||
 	                     dynamic_cast<const MultiPolygon*>(result.get()) ) )
 	{
@@ -148,7 +148,7 @@ double
 GeometrySnapper::computeSizeBasedSnapTolerance(const geom::Geometry& g)
 {
 	const Envelope* env = g.getEnvelopeInternal();
-	double minDimension = (std::min)(env->getHeight(), env->getWidth());
+	double minDimension = std::min(env->getHeight(), env->getWidth());
 	double snapTol = minDimension * snapPrecisionFactor;
 	return snapTol;
 }
@@ -184,7 +184,7 @@ double
 GeometrySnapper::computeOverlaySnapTolerance(const geom::Geometry& g1,
 		const geom::Geometry& g2)
 {
-        return (std::min)(computeOverlaySnapTolerance(g1), computeOverlaySnapTolerance(g2));
+        return std::min(computeOverlaySnapTolerance(g1), computeOverlaySnapTolerance(g2));
 }
 
 /* public static */

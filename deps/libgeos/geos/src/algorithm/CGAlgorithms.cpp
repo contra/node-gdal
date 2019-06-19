@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2005 2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -42,14 +42,7 @@ namespace algorithm { // geos.algorithm
 int
 CGAlgorithms::orientationIndex(const Coordinate& p1,const Coordinate& p2,const Coordinate& q)
 {
-	// travelling along p1->p2, turn counter clockwise to get to q return 1,
-	// travelling along p1->p2, turn clockwise to get to q return -1,
-	// p1, p2 and q are colinear return 0.
-	double dx1=p2.x-p1.x;
-	double dy1=p2.y-p1.y;
-	double dx2=q.x-p2.x;
-	double dy2=q.y-p2.y;
-	return RobustDeterminant::signOfDet2x2(dx1,dy1,dx2,dy2);
+	return RayCrossingCounter::orientationIndex(p1, p2, q);
 }
 
 /*public static*/
@@ -94,7 +87,7 @@ CGAlgorithms::isOnLine(const Coordinate& p, const CoordinateSequence* pt)
 	const Coordinate *pp=&(pt->getAt(0));
 	for(size_t i=1; i<ptsize; ++i)
 	{
-		const Coordinate &p1=pt->getAt(i);	
+		const Coordinate &p1=pt->getAt(i);
 		if ( LineIntersector::hasIntersection(p, *pp, p1) )
 			return true;
 		pp=&p1;
@@ -106,14 +99,14 @@ CGAlgorithms::isOnLine(const Coordinate& p, const CoordinateSequence* pt)
 bool
 CGAlgorithms::isCCW(const CoordinateSequence* ring)
 {
-	// # of points without closing endpoint
-	const std::size_t nPts=ring->getSize()-1;
-
 	// sanity check
-	if (nPts < 3)
+	if (ring->getSize() < 4)
 	{
 		throw util::IllegalArgumentException("Ring has fewer than 3 points, so orientation cannot be determined");
 	}
+
+	// # of points without closing endpoint
+	const std::size_t nPts=ring->getSize()-1;
 
 	// find highest point
 	const Coordinate *hiPt=&ring->getAt(0);
@@ -163,7 +156,7 @@ CGAlgorithms::isCCW(const CoordinateSequence* ring)
 	int disc = computeOrientation(*prev, *hiPt, *next);
 
 	/**
-	 *  If disc is exactly 0, lines are collinear. 
+	 *  If disc is exactly 0, lines are collinear.
 	 * There are two possible cases:
 	 *  (1) the lines lie along the x axis in opposite directions
 	 *  (2) the lines lie on top of one another
@@ -284,17 +277,17 @@ limiting conditions:
 	double s_top=(A.y-C.y)*(B.x-A.x)-(A.x-C.x)*(B.y-A.y);
 	double s_bot=(B.x-A.x)*(D.y-C.y)-(B.y-A.y)*(D.x-C.x);
 	if ((r_bot==0)||(s_bot==0)) {
-		return (std::min)(distancePointLine(A,C,D),
-						(std::min)(distancePointLine(B,C,D),
-						(std::min)(distancePointLine(C,A,B), distancePointLine(D,A,B))));
+		return std::min(distancePointLine(A,C,D),
+						std::min(distancePointLine(B,C,D),
+						std::min(distancePointLine(C,A,B), distancePointLine(D,A,B))));
 	}
 	double s=s_top/s_bot;
 	double r=r_top/r_bot;
 	if ((r<0)||( r>1)||(s<0)||(s>1)) {
 		//no intersection
-		return (std::min)(distancePointLine(A,C,D),
-						(std::min)(distancePointLine(B,C,D),
-						(std::min)(distancePointLine(C,A,B), distancePointLine(D,A,B))));
+		return std::min(distancePointLine(A,C,D),
+						std::min(distancePointLine(B,C,D),
+						std::min(distancePointLine(C,A,B), distancePointLine(D,A,B))));
 	}
 	return 0.0; //intersection exists
 }
@@ -336,9 +329,9 @@ CGAlgorithms::length(const CoordinateSequence* pts)
 
 	double len = 0.0;
 
-	const Coordinate& p = pts->getAt(0);
-	double x0 = p.x;
-	double y0 = p.y;
+	const Coordinate& p0 = pts->getAt(0);
+	double x0 = p0.x;
+	double y0 = p0.y;
 
 	for(size_t i = 1; i < npts; ++i)
 	{

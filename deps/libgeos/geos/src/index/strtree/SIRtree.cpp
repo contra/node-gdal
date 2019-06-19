@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -33,14 +33,14 @@ static bool compareSIRBoundables(Boundable *a, Boundable *b){
 }
 
 /*protected*/
-std::auto_ptr<BoundableList>
+std::unique_ptr<BoundableList>
 SIRtree::createParentBoundables(BoundableList *childBoundables,int newLevel)
 {
 	assert(!childBoundables->empty());
-	std::auto_ptr<BoundableList> parentBoundables ( new BoundableList() );
+	std::unique_ptr<BoundableList> parentBoundables ( new BoundableList() );
 	parentBoundables->push_back(createNode(newLevel));
 
-	std::auto_ptr<BoundableList> sortedChildBoundables ( sortBoundables(childBoundables) );
+	std::unique_ptr<BoundableList> sortedChildBoundables ( sortBoundables(childBoundables) );
 
 	//for(unsigned int i=0;i<sortedChildBoundables->size();i++)
 	for (BoundableList::iterator i=sortedChildBoundables->begin(),
@@ -91,22 +91,22 @@ public:
 		AbstractNode(level, capacity)
 	{}
 
-	~SIRAbstractNode()
+	~SIRAbstractNode() override
 	{
 		delete (Interval *)bounds;
 	}
 
 protected:
 
-	void* computeBounds() const
+	void* computeBounds() const override
 	{
-		Interval* bounds=NULL;
+		Interval* bounds=nullptr;
 		const BoundableList& b = *getChildBoundables();
 		for(unsigned int i=0; i<b.size(); ++i)
 		{
 			const Boundable* childBoundable=b[i];
-			if (bounds==NULL) {
-				bounds=new Interval((Interval*)childBoundable->getBounds());
+			if (bounds==nullptr) {
+				bounds=new Interval(*((Interval*)childBoundable->getBounds()));
 			} else {
 				bounds->expandToInclude((Interval*)childBoundable->getBounds());
 			}
@@ -127,14 +127,16 @@ SIRtree::createNode(int level)
 /**
 * Inserts an item having the given bounds into the tree.
 */
-void SIRtree::insert(double x1, double x2,void* item) {
-	AbstractSTRtree::insert(new Interval(min(x1,x2),max(x1, x2)),item);
+void SIRtree::insert(double x1, double x2, void* item) {
+	std::unique_ptr<Interval> i{new Interval(std::min(x1,x2), std::max(x1, x2))};
+	AbstractSTRtree::insert(i.get(), item);
+	intervals.push_back(std::move(i));
 }
 
-std::auto_ptr<BoundableList>
+std::unique_ptr<BoundableList>
 SIRtree::sortBoundables(const BoundableList* input)
 {
-	std::auto_ptr<BoundableList> output ( new BoundableList(*input) );
+	std::unique_ptr<BoundableList> output ( new BoundableList(*input) );
 	sort(output->begin(), output->end(), compareSIRBoundables);
 	//output->sort(compareSIRBoundables);
 	return output;

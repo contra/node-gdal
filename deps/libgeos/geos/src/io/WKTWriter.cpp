@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2005-2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -18,6 +18,7 @@
  *
  **********************************************************************/
 
+#include <geos/platform.h>
 #include <geos/io/WKTWriter.h>
 #include <geos/io/Writer.h>
 #include <geos/io/CLocalizer.h>
@@ -33,6 +34,7 @@
 #include <geos/geom/PrecisionModel.h>
 #include <geos/util/IllegalArgumentException.h>
 
+#include <algorithm> // for min
 #include <typeinfo>
 #include <cstdio> // should avoid this
 #include <string>
@@ -40,7 +42,6 @@
 #include <cassert>
 #include <cmath>
 #include <iomanip>
-#include <algorithm>
 
 using namespace std;
 using namespace geos::geom;
@@ -76,7 +77,7 @@ WKTWriter::toLineString(const CoordinateSequence& seq)
 {
 	stringstream buf(ios_base::in|ios_base::out);
     buf << "LINESTRING ";
-	unsigned int npts = seq.getSize();
+	unsigned int npts = static_cast<unsigned int>(seq.getSize());
 	if ( npts == 0 )
 	{
 		buf << "EMPTY";
@@ -180,7 +181,7 @@ void
 WKTWriter::appendGeometryTaggedText(const Geometry *geometry, int level,
 		Writer *writer)
 {
-  outputDimension = min( defaultOutputDimension,
+  outputDimension = std::min( defaultOutputDimension,
                          geometry->getCoordinateDimension() );
 
   indent(level, writer);
@@ -235,8 +236,8 @@ WKTWriter::appendPointTaggedText(const Coordinate* coordinate, int level,
 		Writer *writer)
 {
 	writer->write("POINT ");
-    if( outputDimension == 3 && !old3D && coordinate != NULL )
-        writer->write( "Z " );
+	if( outputDimension == 3 && !old3D && coordinate != nullptr )
+		writer->write( "Z " );
 
 	appendPointText(coordinate, level, writer);
 }
@@ -246,8 +247,8 @@ WKTWriter::appendLineStringTaggedText(const LineString *lineString, int level,
 		Writer *writer)
 {
 	writer->write("LINESTRING ");
-    if( outputDimension == 3 && !old3D && !lineString->isEmpty() )
-        writer->write( "Z " );
+	if( outputDimension == 3 && !old3D && !lineString->isEmpty() )
+		writer->write( "Z " );
 
 	appendLineStringText(lineString, level, false, writer);
 }
@@ -261,43 +262,43 @@ WKTWriter::appendLineStringTaggedText(const LineString *lineString, int level,
  */
 void WKTWriter::appendLinearRingTaggedText(const LinearRing* linearRing, int level, Writer *writer) {
 	writer->write("LINEARRING ");
-    if( outputDimension == 3 && !old3D && !linearRing->isEmpty() )
-        writer->write( "Z " );
+	if( outputDimension == 3 && !old3D && !linearRing->isEmpty() )
+		writer->write( "Z " );
 	appendLineStringText((LineString*)linearRing, level, false, writer);
 }
 
 void WKTWriter::appendPolygonTaggedText(const Polygon *polygon, int level, Writer *writer) {
 	writer->write("POLYGON ");
-    if( outputDimension == 3 && !old3D && !polygon->isEmpty())
-        writer->write( "Z " );
+	if( outputDimension == 3 && !old3D && !polygon->isEmpty())
+		writer->write( "Z " );
 	appendPolygonText(polygon, level, false, writer);
 }
 
 void WKTWriter::appendMultiPointTaggedText(const MultiPoint *multipoint, int level, Writer *writer) {
 	writer->write("MULTIPOINT ");
-    if( outputDimension == 3 && !old3D && !multipoint->isEmpty() )
-        writer->write( "Z " );
+	if( outputDimension == 3 && !old3D && !multipoint->isEmpty() )
+		writer->write( "Z " );
 	appendMultiPointText(multipoint, level, writer);
 }
 
 void WKTWriter::appendMultiLineStringTaggedText(const MultiLineString *multiLineString, int level,Writer *writer) {
 	writer->write("MULTILINESTRING ");
-    if( outputDimension == 3 && !old3D && !multiLineString->isEmpty() )
-        writer->write( "Z " );
+	if( outputDimension == 3 && !old3D && !multiLineString->isEmpty() )
+		writer->write( "Z " );
 	appendMultiLineStringText(multiLineString, level, false, writer);
 }
 
 void WKTWriter::appendMultiPolygonTaggedText(const MultiPolygon *multiPolygon, int level, Writer *writer) {
 	writer->write("MULTIPOLYGON ");
-    if( outputDimension == 3 && !old3D && !multiPolygon->isEmpty() )
-        writer->write( "Z " );
+	if( outputDimension == 3 && !old3D && !multiPolygon->isEmpty() )
+		writer->write( "Z " );
 	appendMultiPolygonText(multiPolygon, level, writer);
 }
 
 void WKTWriter::appendGeometryCollectionTaggedText(const GeometryCollection *geometryCollection, int level,Writer *writer) {
 	writer->write("GEOMETRYCOLLECTION ");
-    if( outputDimension == 3 && !old3D && !geometryCollection->isEmpty() )
-        writer->write( "Z " );
+	if( outputDimension == 3 && !old3D && !geometryCollection->isEmpty() )
+		writer->write( "Z " );
 	appendGeometryCollectionText(geometryCollection, level, writer);
 }
 
@@ -305,7 +306,7 @@ void
 WKTWriter::appendPointText(const Coordinate* coordinate, int /*level*/,
 		Writer *writer)
 {
-	if (coordinate==NULL) {
+	if (coordinate==nullptr) {
 		writer->write("EMPTY");
 	} else {
 		writer->write("(");
@@ -359,7 +360,7 @@ WKTWriter::appendLineStringText(const LineString *lineString, int level,
 				writer->write(", ");
 				if (i%10==0) indent(level + 2, writer);
 			}
-			appendCoordinate(&(lineString->getCoordinateN(i)), writer);
+			appendCoordinate(&(lineString->getCoordinateN(static_cast<int>(i))), writer);
 		}
 		writer->write(")");
 	}
@@ -393,7 +394,7 @@ WKTWriter::appendMultiPointText(const MultiPoint *multiPoint,
 		writer->write("EMPTY");
 	} else {
 		writer->write("(");
-		for (unsigned int i=0, n=multiPoint->getNumGeometries();
+		for (unsigned int i=0, n=static_cast<unsigned int>(multiPoint->getNumGeometries());
 				i<n; i++)
 		{
 			if (i > 0)
@@ -416,7 +417,7 @@ void WKTWriter::appendMultiLineStringText(const MultiLineString *multiLineString
 		int level2=level;
 		bool doIndent=indentFirst;
 		writer->write("(");
-		for (unsigned int i=0, n=multiLineString->getNumGeometries();
+		for (unsigned int i=0, n=static_cast<unsigned int>(multiLineString->getNumGeometries());
 				i<n; i++)
 		{
 			if (i>0) {
@@ -440,7 +441,7 @@ void WKTWriter::appendMultiPolygonText(const MultiPolygon *multiPolygon, int lev
 		int level2=level;
 		bool doIndent=false;
 		writer->write("(");
-		for (unsigned int i=0, n=multiPolygon->getNumGeometries();
+		for (unsigned int i=0, n=static_cast<unsigned int>(multiPolygon->getNumGeometries());
 				i < n; i++)
 		{
 			if (i>0) {
@@ -468,7 +469,7 @@ WKTWriter::appendGeometryCollectionText(
 	} else {
 		int level2=level;
 		writer->write("(");
-		for (unsigned int i=0, n=geometryCollection->getNumGeometries();
+		for (unsigned int i=0, n=static_cast<unsigned int>(geometryCollection->getNumGeometries());
 				i < n ; ++i)
 		{
 			if (i>0) {

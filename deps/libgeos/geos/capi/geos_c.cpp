@@ -3,7 +3,7 @@
  *
  * C-Wrapper for GEOS library
  *
- * Copyright (C) 2010 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2010 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2005-2006 Refractions Research Inc.
  *
  * This is free software; you can redistribute and/or modify it under
@@ -11,7 +11,7 @@
  * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
- * Author: Sandro Santilli <strk@keybit.net>
+ * Author: Sandro Santilli <strk@kbt.io>
  *
  ***********************************************************************/
 
@@ -21,10 +21,10 @@
 #include <geos/io/WKBReader.h>
 #include <geos/io/WKTWriter.h>
 #include <geos/io/WKBWriter.h>
-#include <geos/io/CLocalizer.h>
 #include <geos/operation/overlay/OverlayOp.h>
 #include <geos/operation/union/CascadedPolygonUnion.h>
 #include <geos/algorithm/distance/DiscreteHausdorffDistance.h>
+#include <geos/algorithm/distance/DiscreteFrechetDistance.h>
 #include <geos/util/Interrupt.h>
 
 #include <stdexcept>
@@ -73,7 +73,6 @@ using geos::io::WKTReader;
 using geos::io::WKTWriter;
 using geos::io::WKBReader;
 using geos::io::WKBWriter;
-using geos::io::CLocalizer;
 
 using geos::index::strtree::STRtree;
 
@@ -81,7 +80,7 @@ using geos::operation::overlay::OverlayOp;
 using geos::operation::overlay::overlayOp;
 using geos::operation::geounion::CascadedPolygonUnion;
 
-typedef std::auto_ptr<Geometry> GeomAutoPtr;
+typedef std::unique_ptr<Geometry> GeomPtr;
 
 //## GLOBALS ################################################
 
@@ -279,6 +278,12 @@ GEOSDistance(const Geometry *g1, const Geometry *g2, double *dist)
 }
 
 int
+GEOSDistanceIndexed(const Geometry *g1, const Geometry *g2, double *dist)
+{
+    return GEOSDistanceIndexed_r( handle, g1, g2, dist );
+}
+
+int
 GEOSHausdorffDistance(const Geometry *g1, const Geometry *g2, double *dist)
 {
     return GEOSHausdorffDistance_r( handle, g1, g2, dist );
@@ -288,6 +293,18 @@ int
 GEOSHausdorffDistanceDensify(const Geometry *g1, const Geometry *g2, double densifyFrac, double *dist)
 {
     return GEOSHausdorffDistanceDensify_r( handle, g1, g2, densifyFrac, dist );
+}
+
+int
+GEOSFrechetDistance(const Geometry *g1, const Geometry *g2, double *dist)
+{
+    return GEOSFrechetDistance_r( handle, g1, g2, dist );
+}
+
+int
+GEOSFrechetDistanceDensify(const Geometry *g1, const Geometry *g2, double densifyFrac, double *dist)
+{
+    return GEOSFrechetDistanceDensify_r( handle, g1, g2, densifyFrac, dist );
 }
 
 int
@@ -437,6 +454,30 @@ GEOSConvexHull(const Geometry *g)
 }
 
 Geometry *
+GEOSMinimumRotatedRectangle(const Geometry *g)
+{
+    return GEOSMinimumRotatedRectangle_r( handle, g );
+}
+
+Geometry *
+GEOSMinimumWidth(const Geometry *g)
+{
+    return GEOSMinimumWidth_r( handle, g );
+}
+
+Geometry *
+GEOSMinimumClearanceLine(const Geometry *g)
+{
+    return GEOSMinimumClearanceLine_r( handle, g );
+}
+
+int
+GEOSMinimumClearance(const Geometry *g, double *d)
+{
+    return GEOSMinimumClearance_r( handle, g, d);
+}
+
+Geometry *
 GEOSDifference(const Geometry *g1, const Geometry *g2)
 {
     return GEOSDifference_r( handle, g1, g2 );
@@ -485,6 +526,11 @@ GEOSPointOnSurface(const Geometry *g)
 }
 
 
+Geometry *
+GEOSClipByRect(const Geometry *g, double xmin, double ymin, double xmax, double ymax)
+{
+    return GEOSClipByRect_r( handle, g, xmin, ymin, xmax, ymax );
+}
 
 
 
@@ -620,6 +666,16 @@ GEOSGeomGetY(const Geometry *g, double *y)
 }
 
 /*
+ * For POINT
+ * returns 0 on exception, otherwise 1
+ */
+int
+GEOSGeomGetZ(const Geometry *g1, double *z)
+{
+	return GEOSGeomGetZ_r(handle, g1, z);
+}
+
+/*
  * Call only on polygon
  * Return a copy of the internal Geometry.
  */
@@ -676,6 +732,12 @@ GEOSLineMerge(const Geometry *g)
     return GEOSLineMerge_r( handle, g );
 }
 
+Geometry *
+GEOSReverse(const Geometry *g)
+{
+    return GEOSReverse_r( handle, g );
+}
+
 int
 GEOSGetSRID(const Geometry *g)
 {
@@ -686,6 +748,18 @@ void
 GEOSSetSRID(Geometry *g, int srid)
 {
     return GEOSSetSRID_r( handle, g, srid );
+}
+
+void *
+GEOSGeom_getUserData(const Geometry *g)
+{
+    return GEOSGeom_getUserData_r( handle, g );
+}
+
+void
+GEOSGeom_setUserData(Geometry *g, void* userData)
+{
+    return GEOSGeom_setUserData_r( handle, g, userData );
 }
 
 char
@@ -791,6 +865,12 @@ GEOSCoordSeq_getDimensions(const CoordinateSequence *s, unsigned int *dims)
     return GEOSCoordSeq_getDimensions_r( handle, s, dims );
 }
 
+int
+GEOSCoordSeq_isCCW(const CoordinateSequence *s, char *is_ccw)
+{
+    return GEOSCoordSeq_isCCW_r(handle, s, is_ccw);
+}
+
 void
 GEOSCoordSeq_destroy(CoordinateSequence *s)
 {
@@ -833,6 +913,18 @@ GEOSGeom_clone(const Geometry *g)
     return GEOSGeom_clone_r( handle, g );
 }
 
+GEOSGeometry *
+GEOSGeom_setPrecision(const GEOSGeometry *g, double gridSize, int flags)
+{
+	return GEOSGeom_setPrecision_r(handle, g, gridSize, flags);
+}
+
+double
+GEOSGeom_getPrecision(const GEOSGeometry *g)
+{
+	return GEOSGeom_getPrecision_r(handle, g);
+}
+
 int
 GEOSGeom_getDimensions(const Geometry *g)
 {
@@ -843,6 +935,26 @@ int
 GEOSGeom_getCoordinateDimension(const Geometry *g)
 {
     return GEOSGeom_getCoordinateDimension_r( handle, g );
+}
+
+int GEOS_DLL GEOSGeom_getXMin(const GEOSGeometry* g, double* value)
+{
+    return GEOSGeom_getXMin_r(handle, g, value);
+}
+
+int GEOS_DLL GEOSGeom_getYMin(const GEOSGeometry* g, double* value)
+{
+    return GEOSGeom_getYMin_r(handle, g, value);
+}
+
+int GEOS_DLL GEOSGeom_getXMax(const GEOSGeometry* g, double* value)
+{
+    return GEOSGeom_getXMax_r(handle, g, value);
+}
+
+int GEOS_DLL GEOSGeom_getYMax(const GEOSGeometry* g, double* value)
+{
+    return GEOSGeom_getYMax_r(handle, g, value);
 }
 
 Geometry *
@@ -1117,6 +1229,22 @@ GEOSSTRtree_query (geos::index::strtree::STRtree *tree,
     GEOSSTRtree_query_r( handle, tree, g, cb, userdata );
 }
 
+const GEOSGeometry *
+GEOSSTRtree_nearest (geos::index::strtree::STRtree *tree,
+                     const geos::geom::Geometry *g)
+{
+    return GEOSSTRtree_nearest_r( handle, tree, g);
+}
+
+const void* GEOSSTRtree_nearest_generic(GEOSSTRtree *tree,
+                                        const void* item,
+                                        const GEOSGeometry* itemEnvelope,
+                                        GEOSDistanceCallback distancefn,
+                                        void* userdata)
+{
+    return GEOSSTRtree_nearest_generic_r( handle, tree, item, itemEnvelope, distancefn, userdata);
+}
+
 void
 GEOSSTRtree_iterate(geos::index::strtree::STRtree *tree,
                     GEOSQueryCallback callback,
@@ -1268,6 +1396,23 @@ Geometry *
 GEOSDelaunayTriangulation(const Geometry *g, double tolerance, int onlyEdges)
 {
   return GEOSDelaunayTriangulation_r(handle, g, tolerance, onlyEdges);
+}
+
+Geometry*
+GEOSVoronoiDiagram(const Geometry *g, const Geometry *env, double tolerance, int onlyEdges)
+{
+  return GEOSVoronoiDiagram_r(handle, g, env, tolerance, onlyEdges);
+}
+
+int
+GEOSSegmentIntersection(double ax0, double ay0, double ax1, double ay1,
+                        double bx0, double by0, double bx1, double by1,
+                        double* cx, double* cy)
+{
+    return GEOSSegmentIntersection_r(handle,
+        ax0, ay0, ax1, ay1,
+        bx0, by0, bx1, by1,
+        cx, cy);
 }
 
 } /* extern "C" */

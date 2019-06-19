@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2005-2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -27,6 +27,7 @@
 #include <geos/geom/LineString.h>
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/CoordinateSequenceFactory.h>
+#include <geos/util/Interrupt.h>
 
 #include <typeinfo>
 #include <algorithm>
@@ -62,7 +63,7 @@ private:
 		double dyq=q->y-o->y;
 
 		int orient = CGAlgorithms::computeOrientation(*o, *p, *q);
-		
+
 
 		if (orient == CGAlgorithms::COUNTERCLOCKWISE) return 1;
 		if (orient == CGAlgorithms::CLOCKWISE) return -1;
@@ -96,10 +97,10 @@ public:
 CoordinateSequence *
 ConvexHull::toCoordinateSequence(Coordinate::ConstVect &cv)
 {
-	const CoordinateSequenceFactory *csf = 
+	const CoordinateSequenceFactory *csf =
 		geomFactory->getCoordinateSequenceFactory();
 
-	// Create a new Coordinate::Vect for feeding it to 
+	// Create a new Coordinate::Vect for feeding it to
 	// the CoordinateSequenceFactory
 	Coordinate::Vect *vect=new Coordinate::Vect();
 
@@ -160,13 +161,13 @@ ConvexHull::computeOctRing(const Coordinate::ConstVect &inputPts,
 	Coordinate::ConstVect &dest)
 {
 	computeOctPts(inputPts, dest);
-	
+
 	// Remove consecutive equal Coordinates
 	// unique() returns an iterator to the end of the resulting
 	// sequence, we erase from there to the end.
 	dest.erase( std::unique(dest.begin(),dest.end()), dest.end() );
 
-	// points must all lie in a line	
+	// points must all lie in a line
 	if ( dest.size() < 3 ) return false;
 
 	// close ring
@@ -229,7 +230,7 @@ ConvexHull::getConvexHull()
 	if (nInputPts==0) // Return an empty geometry
 		return geomFactory->createEmptyGeometry();
 
-	if (nInputPts==1) // Return a Point 
+	if (nInputPts==1) // Return a Point
 	{
 		// Copy the Coordinate from the ConstVect
 		return geomFactory->createPoint(*(inputPts[0]));
@@ -248,12 +249,18 @@ ConvexHull::getConvexHull()
 		reduce(inputPts);
 	}
 
+    GEOS_CHECK_FOR_INTERRUPTS();
+
 	// sort points for Graham scan.
 	preSort(inputPts);
+
+    GEOS_CHECK_FOR_INTERRUPTS();
 
 	// Use Graham scan to find convex hull.
 	Coordinate::ConstVect cHS;
 	grahamScan(inputPts, cHS);
+
+    GEOS_CHECK_FOR_INTERRUPTS();
 
 	return lineOrPolygon(cHS);
 
@@ -284,7 +291,7 @@ ConvexHull::preSort(Coordinate::ConstVect &pts)
 
 /*private*/
 void
-ConvexHull::grahamScan(const Coordinate::ConstVect &c, 
+ConvexHull::grahamScan(const Coordinate::ConstVect &c,
 		Coordinate::ConstVect &ps)
 {
 	ps.push_back(c[0]);
@@ -294,7 +301,7 @@ ConvexHull::grahamScan(const Coordinate::ConstVect &c,
 	for(size_t i=3, n=c.size(); i<n; ++i)
 	{
 		const Coordinate *p = ps.back(); ps.pop_back();
-		while (!ps.empty() && 
+		while (!ps.empty() &&
 			CGAlgorithms::computeOrientation(
 		    *(ps.back()), *p, *(c[i])) > 0)
 		{
@@ -405,7 +412,7 @@ ConvexHull::grahamScan(const Coordinate::ConstVect &c,
 //	}
 //}
 
- 
+
 
 /*private*/
 bool
@@ -474,7 +481,7 @@ ConvexHull::lineOrPolygon(const Coordinate::ConstVect &input)
 	}
 	CoordinateSequence *cl2=toCoordinateSequence(cleaned);
 	LinearRing *linearRing=geomFactory->createLinearRing(cl2);
-	return geomFactory->createPolygon(linearRing,NULL);
+	return geomFactory->createPolygon(linearRing,nullptr);
 }
 
 /*private*/
@@ -490,7 +497,7 @@ ConvexHull::cleanRing(const Coordinate::ConstVect &original,
 	assert(last);
 	assert(original[0]->equals2D(*last));
 
-	const Coordinate *prev = NULL;
+	const Coordinate *prev = nullptr;
 	for (size_t i=0; i<npts-1; ++i)
 	{
 		const Coordinate *curr = original[i];
@@ -499,7 +506,7 @@ ConvexHull::cleanRing(const Coordinate::ConstVect &original,
 		// skip consecutive equal coordinates
 		if (curr->equals2D(*next)) continue;
 
-		if ( prev != NULL &&  isBetween(*prev, *curr, *next) )
+		if ( prev != nullptr &&  isBetween(*prev, *curr, *next) )
 		{
 			continue;
 		}

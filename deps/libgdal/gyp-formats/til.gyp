@@ -10,8 +10,7 @@
 				"../gdal/frmts/til/tildataset.cpp"
 			],
 			"include_dirs": [
-				"../gdal/frmts/til",
-				"../gdal/frmts/vrt"
+				"../gdal/frmts/til"
 			]
 		}
 	]

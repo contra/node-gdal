@@ -25,7 +25,15 @@
 			"./gdal/ogr/ogrsf_frmts/avc",
 			"./gdal/ogr/ogrsf_frmts/geojson",
 			"./gdal/ogr/ogrsf_frmts/geojson/libjson",
-			"./gdal/frmts/jpeg/libjpeg"
+			"./gdal/frmts/jpeg/libjpeg",
+			"./gdal/frmts/gtiff/libtiff",
+			"./gdal/frmts/pcidsk/sdk",
+			"./gdal/frmts/pcidsk/sdk/channel",
+			"./gdal/frmts/pcidsk/sdk/core",
+			"./gdal/frmts/pcidsk/sdk/port",
+			"./gdal/frmts/pcidsk/sdk/segment",
+			"./gdal/frmts/iso8211",
+			"./gdal/third_party/LercLib",
 		],
 		"defines": [
 			"_LARGEFILE_SOURCE",

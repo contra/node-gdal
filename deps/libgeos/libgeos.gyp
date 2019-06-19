@@ -42,7 +42,6 @@
 				"geos/src/geom/GeometryCollection.cpp",
 				"geos/src/geom/GeometryComponentFilter.cpp",
 				"geos/src/geom/GeometryFactory.cpp",
-				"geos/src/geom/GeometryList.cpp",
 				"geos/src/geom/IntersectionMatrix.cpp",
 				"geos/src/geom/LineSegment.cpp",
 				"geos/src/geom/LineString.cpp",

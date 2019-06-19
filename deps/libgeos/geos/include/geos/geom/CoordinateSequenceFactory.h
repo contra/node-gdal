@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -28,7 +28,7 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom { 
+	namespace geom {
 		class CoordinateSequence;
 		class Coordinate;
 	}
@@ -46,6 +46,12 @@ namespace geom { // geos::geom
  */
 class GEOS_DLL CoordinateSequenceFactory {
 public:
+
+	/** \brief
+	 * Returns an empty CoordinateSequence, the dimensions will be autodetected
+	 * when it is populated.
+	 */
+	virtual CoordinateSequence *create() const=0;
 
 	/** \brief
 	 * Returns a CoordinateSequence based on the given array.
@@ -77,7 +83,7 @@ public:
 	 * 	(0=unknown, 2, or 3 - ignored if not user specifiable)
 	 */
 	virtual CoordinateSequence *create(std::size_t size,
-                                           std::size_t dimension) const=0;
+                                           std::size_t dimension=0) const=0;
 
 	/** \brief
 	 * Creates a CoordinateSequence which is a copy of the given one.

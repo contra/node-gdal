@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -21,6 +21,7 @@
 #include <geos/geomgraph/index/MonotoneChain.h>
 #include <geos/geomgraph/index/SweepLineEvent.h>
 #include <geos/geomgraph/Edge.h>
+#include <geos/util/Interrupt.h>
 
 using namespace std;
 
@@ -48,7 +49,7 @@ SimpleMCSweepLineIntersector::computeIntersections(vector<Edge*> *edges,
 	SegmentIntersector *si, bool testAllSegments)
 {
 	if (testAllSegments)
-		add(edges,NULL);
+		add(edges,nullptr);
 	else
 		add(edges);
 	computeIntersections(si);
@@ -93,10 +94,11 @@ SimpleMCSweepLineIntersector::add(Edge *edge, void* edgeSet)
 	events.reserve(events.size()+(n*2));
 	for(size_t i=0; i<n; ++i)
 	{
-		MonotoneChain *mc=new MonotoneChain(mce,i);
-		SweepLineEvent *insertEvent=new SweepLineEvent(edgeSet,mce->getMinX(i),NULL,mc);
+		GEOS_CHECK_FOR_INTERRUPTS();
+		MonotoneChain *mc=new MonotoneChain(mce, static_cast<int>(i));
+		SweepLineEvent *insertEvent=new SweepLineEvent(edgeSet,mce->getMinX(static_cast<int>(i)),nullptr,mc);
 		events.push_back(insertEvent);
-		events.push_back(new SweepLineEvent(edgeSet,mce->getMaxX(i),insertEvent,mc));
+		events.push_back(new SweepLineEvent(edgeSet,mce->getMaxX(static_cast<int>(i)),insertEvent,mc));
 	}
 }
 
@@ -111,10 +113,11 @@ SimpleMCSweepLineIntersector::prepareEvents()
 	sort(events.begin(), events.end(), SweepLineEventLessThen());
 	for(size_t i=0; i<events.size(); ++i)
 	{
+		GEOS_CHECK_FOR_INTERRUPTS();
 		SweepLineEvent *ev=events[i];
 		if (ev->isDelete())
 		{
-			ev->getInsertEvent()->setDeleteEventIndex(i);
+			ev->getInsertEvent()->setDeleteEventIndex(static_cast<int>(i));
 		}
 	}
 }
@@ -126,10 +129,15 @@ SimpleMCSweepLineIntersector::computeIntersections(SegmentIntersector *si)
 	prepareEvents();
 	for(size_t i=0; i<events.size(); ++i)
 	{
+		GEOS_CHECK_FOR_INTERRUPTS();
 		SweepLineEvent *ev=events[i];
 		if (ev->isInsert())
 		{
-			processOverlaps(i,ev->getDeleteEventIndex(),ev,si);
+			processOverlaps(static_cast<int>(i),ev->getDeleteEventIndex(),ev,si);
+		}
+		if (si->getIsDone())
+		{
+			break;
 		}
 	}
 }
@@ -153,7 +161,7 @@ SimpleMCSweepLineIntersector::processOverlaps(int start, int end,
 			MonotoneChain *mc1=(MonotoneChain*) ev1->getObject();
 			// don't compare edges in same group
 			// null group indicates that edges should be compared
-			if (ev0->edgeSet==NULL || (ev0->edgeSet!=ev1->edgeSet))
+			if (ev0->edgeSet==nullptr || (ev0->edgeSet!=ev1->edgeSet))
 			{
 				mc0->computeIntersections(mc1,si);
 				nOverlaps++;

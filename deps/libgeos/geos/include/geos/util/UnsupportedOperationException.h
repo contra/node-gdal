@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -28,7 +28,7 @@ namespace util { // geos::util
 /**
  * \class UnsupportedOperationException util.h geos.h
  *
- * \brief Indicates that the requested operation is unsopported.
+ * \brief Indicates that the requested operation is unsupported.
  *
  * This exception is thrown - for example - when requesting the
  * X or Y member of an empty Point
@@ -45,7 +45,7 @@ public:
 		GEOSException("UnsupportedOperationException", msg)
 	{}
 
-	~UnsupportedOperationException() throw() {}
+	~UnsupportedOperationException() throw() override {}
 };
 
 } // namespace geos::util

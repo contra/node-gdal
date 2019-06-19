@@ -7,12 +7,12 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
  *
- * Last port: triangulate/Vertex.java r524
+ * Last port: triangulate/Vertex.java r705
  *
  **********************************************************************/
 
@@ -48,27 +48,24 @@ Vertex::Vertex() : p() {
 int Vertex::classify(const Vertex &p0, const Vertex &p1)
 {
 	Vertex &p2 = *this;
-	std::auto_ptr<Vertex> a = p1.sub(p0);
-	std::auto_ptr<Vertex> b = p2.sub(p0);
+	std::unique_ptr<Vertex> a = p1.sub(p0);
+	std::unique_ptr<Vertex> b = p2.sub(p0);
 	double sa = a->crossProduct(*b);
-	int ret;
 
 	if (sa > 0.0)
-		ret =  LEFT;
+		return LEFT;
 	if (sa < 0.0)
-		ret =  RIGHT;
+		return RIGHT;
 	if ((a->getX() * b->getX() < 0.0) || (a->getY() * b->getY() < 0.0))
-		ret =  BEHIND;
+		return BEHIND;
 	if (a->magn() < b->magn())
-		ret =  BEYOND;
+		return BEYOND;
 	if (p0.equals(p2))
-		ret =  ORIGIN;
+		return ORIGIN;
 	if (p1.equals(p2))
-		ret =  DESTINATION;
+		return DESTINATION;
 	else
-		ret =  BETWEEN;
-
-	return ret;
+		return BETWEEN;
 }
 
 bool Vertex::isInCircle(const Vertex &a, const Vertex &b, const Vertex &c) const
@@ -86,7 +83,7 @@ bool Vertex::leftOf(const QuadEdge &e) const {
 	return isCCW(e.orig(), e.dest());
 }
 
-std::auto_ptr<HCoordinate> Vertex::bisector(const Vertex &a, const Vertex &b)
+std::unique_ptr<HCoordinate> Vertex::bisector(const Vertex &a, const Vertex &b)
 {
 	// returns the perpendicular bisector of the line segment ab
 	double dx = b.getX() - a.getX();
@@ -94,12 +91,12 @@ std::auto_ptr<HCoordinate> Vertex::bisector(const Vertex &a, const Vertex &b)
 	HCoordinate l1 = HCoordinate(a.getX() + dx / 2.0, a.getY() + dy / 2.0, 1.0);
 	HCoordinate l2 = HCoordinate(a.getX() - dy + dx / 2.0, a.getY() + dx + dy / 2.0, 1.0);
 
-	return std::auto_ptr<HCoordinate>(new HCoordinate(l1, l2));
+	return std::unique_ptr<HCoordinate>(new HCoordinate(l1, l2));
 }
 
 double Vertex::circumRadiusRatio(const Vertex &b, const Vertex &c)
 {
-	std::auto_ptr<Vertex> x(circleCenter(b, c));
+	std::unique_ptr<Vertex> x(circleCenter(b, c));
 	double radius = distance(*x, b);
 	double edgeLength = distance(*this, b);
 	double el = distance(b, c);
@@ -116,24 +113,24 @@ double Vertex::circumRadiusRatio(const Vertex &b, const Vertex &c)
 	return radius / edgeLength;
 }
 
-std::auto_ptr<Vertex> Vertex::midPoint(const Vertex &a)
+std::unique_ptr<Vertex> Vertex::midPoint(const Vertex &a)
 {
 	double xm = (p.x + a.getX()) / 2.0;
 	double ym = (p.y + a.getY()) / 2.0;
 	double zm = (p.z + a.getZ()) / 2.0;
-	return std::auto_ptr<Vertex>(new Vertex(xm, ym, zm));
+	return std::unique_ptr<Vertex>(new Vertex(xm, ym, zm));
 }
 
-std::auto_ptr<Vertex> Vertex::circleCenter(const Vertex &b, const Vertex &c) const
+std::unique_ptr<Vertex> Vertex::circleCenter(const Vertex &b, const Vertex &c) const
 {
-	std::auto_ptr<Vertex> a(new Vertex(getX(), getY()));
+	std::unique_ptr<Vertex> a(new Vertex(getX(), getY()));
 	// compute the perpendicular bisector of cord ab
-	std::auto_ptr<HCoordinate> cab = bisector(*a, b);
+	std::unique_ptr<HCoordinate> cab = bisector(*a, b);
 	// compute the perpendicular bisector of cord bc
-	std::auto_ptr<HCoordinate> cbc = bisector(b, c);
+	std::unique_ptr<HCoordinate> cbc = bisector(b, c);
 	// compute the intersection of the bisectors (circle radii)
-	std::auto_ptr<HCoordinate> hcc(new HCoordinate(*cab, *cbc));
-	std::auto_ptr<Vertex> cc;
+	std::unique_ptr<HCoordinate> hcc(new HCoordinate(*cab, *cbc));
+	std::unique_ptr<Vertex> cc;
 
 	try
 	{
@@ -162,7 +159,7 @@ double Vertex::interpolateZValue(const Vertex &v0, const Vertex &v1,
 	return z;
 }
 
-double Vertex::interpolateZ(const Coordinate &p, const Coordinate &v0, 
+double Vertex::interpolateZ(const Coordinate &p, const Coordinate &v0,
 		const Coordinate &v1, const Coordinate &v2)
 {
 	double x0 = v0.x;
@@ -180,7 +177,7 @@ double Vertex::interpolateZ(const Coordinate &p, const Coordinate &v0,
 	return z;
 }
 
-double Vertex::interpolateZ(const Coordinate &p, const Coordinate &p0, 
+double Vertex::interpolateZ(const Coordinate &p, const Coordinate &p0,
 		const Coordinate &p1)
 {
 	double segLen = p0.distance(p1);

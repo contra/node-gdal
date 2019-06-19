@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2005-2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -29,14 +29,15 @@
 #include <geos/geomgraph/Label.h>
 #include <geos/geomgraph/Position.h>
 
-#include <geos/geomgraph/index/SimpleMCSweepLineIntersector.h> 
-#include <geos/geomgraph/index/SegmentIntersector.h> 
+#include <geos/geomgraph/index/SimpleMCSweepLineIntersector.h>
+#include <geos/geomgraph/index/SegmentIntersector.h>
 #include <geos/geomgraph/index/EdgeSetIntersector.h>
 
-#include <geos/geom/CoordinateArraySequence.h> 
+#include <geos/geom/CoordinateArraySequence.h>
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/Location.h>
 #include <geos/geom/Point.h>
+#include <geos/geom/Envelope.h>
 #include <geos/geom/LinearRing.h>
 #include <geos/geom/LineString.h>
 #include <geos/geom/Polygon.h>
@@ -44,11 +45,12 @@
 #include <geos/geom/MultiLineString.h>
 #include <geos/geom/MultiPolygon.h>
 #include <geos/geom/GeometryCollection.h>
+#include <geos/util/Interrupt.h>
 
 #include <geos/inline.h>
 
 #include <vector>
-#include <memory> // auto_ptr
+#include <memory> // unique_ptr
 #include <cassert>
 #include <typeinfo>
 
@@ -73,9 +75,9 @@ namespace geomgraph { // geos.geomgraph
  * for determining whether
  * a component (node or edge) that appears multiple times in elements
  * of a MultiGeometry is in the boundary or the interior of the Geometry
- * 
+ *
  * The SFS uses the "Mod-2 Rule", which this function implements
- * 
+ *
  * An alternative (and possibly more intuitive) rule would be
  * the "At Most One Rule":
  *    isInBoundary = (componentCount == 1)
@@ -126,7 +128,7 @@ CoordinateSequence*
 GeometryGraph::getBoundaryPoints()
 {
 
-	if ( ! boundaryPoints.get() ) 
+	if ( ! boundaryPoints.get() )
 	{
 		// Collection will be destroied by GeometryGraph dtor
 		vector<Node*>* coll = getBoundaryNodes();
@@ -165,6 +167,9 @@ GeometryGraph::computeSplitEdges(vector<Edge*> *edgelist)
 #endif
 		e->eiList.addSplitEdges(edgelist);
 	}
+#if GEOS_DEBUG
+	cerr<<"["<<this<<"] GeometryGraph::computeSplitEdges() completed "<<endl;
+#endif
 }
 
 void
@@ -343,25 +348,49 @@ GeometryGraph::addPoint(Coordinate& pt)
 	insertPoint(argIndex,pt,Location::INTERIOR);
 }
 
+template <class T, class C>
+void collect_intersecting_edges(const Envelope *env, T start, T end, C &to)
+{
+  for (T i=start; i != end; ++i)
+  {
+    Edge *e = *i;
+    if ( e->getEnvelope()->intersects(env) ) to.push_back(e);
+  }
+}
+
 /*public*/
 SegmentIntersector*
-GeometryGraph::computeSelfNodes(LineIntersector *li, bool computeRingSelfNodes)
+GeometryGraph::computeSelfNodes(LineIntersector &li,
+  bool computeRingSelfNodes, const Envelope *env)
 {
-	SegmentIntersector *si=new SegmentIntersector(li,true,false);
-    	auto_ptr<EdgeSetIntersector> esi(createEdgeSetIntersector());
+	return computeSelfNodes(li, computeRingSelfNodes, false, env);
+}
 
-	// optimized test for Polygons and Rings
-	if (! computeRingSelfNodes
-	    && ( dynamic_cast<const LinearRing*>(parentGeom)
+SegmentIntersector*
+GeometryGraph::computeSelfNodes(LineIntersector &li,
+  bool computeRingSelfNodes, bool isDoneIfProperInt, const Envelope *env)
+{
+	SegmentIntersector *si = new SegmentIntersector(&li, true, false);
+	si->setIsDoneIfProperInt(isDoneIfProperInt);
+	unique_ptr<EdgeSetIntersector> esi(createEdgeSetIntersector());
+
+	typedef vector<Edge*> EC;
+	EC *se = edges;
+	EC self_edges_copy;
+
+	if ( env && ! env->covers(parentGeom->getEnvelopeInternal()) ) {
+		collect_intersecting_edges(env, se->begin(), se->end(), self_edges_copy);
+    //cerr << "(computeSelfNodes) Self edges reduced from " << se->size() << " to " << self_edges_copy.size() << endl;
+		se = &self_edges_copy;
+	}
+
+	bool isRings = dynamic_cast<const LinearRing*>(parentGeom)
 	    || dynamic_cast<const Polygon*>(parentGeom)
-	    || dynamic_cast<const MultiPolygon*>(parentGeom) ))
-	{
-		esi->computeIntersections(edges, si, false);
-	}
-	else
-	{
-		esi->computeIntersections(edges, si, true);
-	}
+	    || dynamic_cast<const MultiPolygon*>(parentGeom);
+
+	bool computeAllSegments = computeRingSelfNodes || ! isRings;
+
+	esi->computeIntersections(se, si, computeAllSegments);
 
 #if GEOS_DEBUG
 	cerr << "SegmentIntersector # tests = " << si->numTests << endl;
@@ -373,7 +402,7 @@ GeometryGraph::computeSelfNodes(LineIntersector *li, bool computeRingSelfNodes)
 
 SegmentIntersector*
 GeometryGraph::computeEdgeIntersections(GeometryGraph *g,
-	LineIntersector *li, bool includeProper)
+	LineIntersector *li, bool includeProper, const Envelope *env)
 {
 #if GEOS_DEBUG
 	cerr<<"GeometryGraph::computeEdgeIntersections call"<<endl;
@@ -381,8 +410,26 @@ GeometryGraph::computeEdgeIntersections(GeometryGraph *g,
 	SegmentIntersector *si=new SegmentIntersector(li, includeProper, true);
 
 	si->setBoundaryNodes(getBoundaryNodes(), g->getBoundaryNodes());
-	auto_ptr<EdgeSetIntersector> esi(createEdgeSetIntersector());
-	esi->computeIntersections(edges, g->edges, si);
+	unique_ptr<EdgeSetIntersector> esi(createEdgeSetIntersector());
+
+	typedef vector<Edge*> EC;
+
+	EC self_edges_copy;
+	EC other_edges_copy;
+
+	EC *se = edges;
+	EC *oe = g->edges;
+	if ( env && ! env->covers(parentGeom->getEnvelopeInternal()) ) {
+		collect_intersecting_edges(env, se->begin(), se->end(), self_edges_copy);
+    //cerr << "Self edges reduced from " << se->size() << " to " << self_edges_copy.size() << endl;
+		se = &self_edges_copy;
+	}
+	if ( env && ! env->covers(g->parentGeom->getEnvelopeInternal()) ) {
+		collect_intersecting_edges(env, oe->begin(), oe->end(), other_edges_copy);
+    //cerr << "Other edges reduced from " << oe->size() << " to " << other_edges_copy.size() << endl;
+		oe = &other_edges_copy;
+	}
+	esi->computeIntersections(se, oe, si);
 #if GEOS_DEBUG
 	cerr<<"GeometryGraph::computeEdgeIntersections returns"<<endl;
 #endif
@@ -393,7 +440,7 @@ void
 GeometryGraph::insertPoint(int argIndex, const Coordinate& coord,
 	int onLocation)
 {
-#if GEOS_DEBUG
+#if GEOS_DEBUG > 1
 	cerr<<"GeometryGraph::insertPoint("<<coord.toString()<<" called"<<endl;
 #endif
 	Node *n=nodes->addNode(coord);
@@ -450,6 +497,7 @@ GeometryGraph::addSelfIntersectionNodes(int argIndex)
 		{
 			EdgeIntersection *ei=*eiIt;
 			addSelfIntersectionNode(argIndex, ei->coord, eLoc);
+			GEOS_CHECK_FOR_INTERRUPTS();
 		}
 	}
 }
@@ -499,7 +547,7 @@ GeometryGraph::GeometryGraph(int newArgIndex,
 	argIndex(newArgIndex),
 	hasTooFewPointsVar(false)
 {
-	if (parentGeom!=NULL) add(parentGeom);
+	if (parentGeom!=nullptr) add(parentGeom);
 }
 
 GeometryGraph::GeometryGraph(int newArgIndex,
@@ -513,13 +561,13 @@ GeometryGraph::GeometryGraph(int newArgIndex,
 	argIndex(newArgIndex),
 	hasTooFewPointsVar(false)
 {
-	if (parentGeom!=NULL) add(parentGeom);
+	if (parentGeom!=nullptr) add(parentGeom);
 }
 
 GeometryGraph::GeometryGraph()
 	:
 	PlanarGraph(),
-	parentGeom(NULL),
+	parentGeom(nullptr),
 	useBoundaryDeterminationRule(true),
     boundaryNodeRule(algorithm::BoundaryNodeRule::getBoundaryOGCSFS()),
 	argIndex(-1),
