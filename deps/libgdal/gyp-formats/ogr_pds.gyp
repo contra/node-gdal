@@ -12,7 +12,8 @@
 				"../gdal/ogr/ogrsf_frmts/pds/ogrpdsdriver.cpp"
 			],
 			"include_dirs": [
-				"../gdal/ogr/ogrsf_frmts/pds"
+				"../gdal/ogr/ogrsf_frmts/pds",
+				"../gdal/frmts/pds"
 			]
 		}
 	]

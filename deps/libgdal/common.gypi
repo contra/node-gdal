@@ -23,6 +23,7 @@
 			"./gdal/ogr/ogrsf_frmts/generic",
 			"./gdal/ogr/ogrsf_frmts/shape",
 			"./gdal/ogr/ogrsf_frmts/avc",
+			"./gdal/ogr/ogrsf_frmts/vrt",
 			"./gdal/ogr/ogrsf_frmts/geojson",
 			"./gdal/ogr/ogrsf_frmts/geojson/libjson",
 			"./gdal/frmts/jpeg/libjpeg",

@@ -19,57 +19,6 @@ fi
 tar -xzf geos.tar.bz2
 mv geos-${GEOS_VERSION} $dir_geos
 
-rm -rf $dir_geos/php
-rm -rf $dir_geos/swig
-rm -rf $dir_geos/doc
-rm -rf $dir_geos/cmake
-rm -rf $dir_geos/tests
-rm -rf $dir_geos/tools
-rm -rf $dir_geos/macros
-rm -f $dir_geos/ChangeLog
-rm -f $dir_geos/config*
-rm -rf $dir_geos/CMakeLists.txt
-rm -rf $dir_geos/*/CMakeLists.txt
-rm -rf $dir_geos/*/*/CMakeLists.txt
-rm -rf $dir_geos/*.in
-rm -rf $dir_geos/*/*.in
-rm -rf $dir_geos/*/*/*.in
-rm -rf $dir_geos/*/*/*/*.in
-rm -rf $dir_geos/*.am
-rm -rf $dir_geos/*/*.am
-rm -rf $dir_geos/*/*/*.am
-rm -rf $dir_geos/*/*/*/*.am
-rm -rf $dir_geos/*.sh
-rm -rf $dir_geos/*.bat
-rm -rf $dir_geos/*.opt
-rm -rf $dir_geos/*.py
-rm -rf $dir_geos/*.dox
-rm -rf $dir_geos/**/*Makefile*
-rm -rf $dir_geos/**/GNUmakefile
-rm -rf $dir_geos/**/Doxyfile
-rm -rf $dir_geos/**/Makefile.dist
-rm -rf $dir_geos/**/makefile.vc
-rm -rf $dir_geos/**/*.html
-rm -rf $dir_geos/**/*.wince
-rm -rf $dir_geos/**/*.m4
-rm -f $dir_geos/Doxyfile
-rm -f $dir_geos/acsite.m4
-rm -f $dir_geos/install-sh
-rm -f $dir_geos/py-compile
-rm -f $dir_geos/missing
-rm -f $dir_geos/depcomp
-rm -f $dir_geos/GNUmakefile
-rm -f $dir_geos/Makefile.am
-rm -f $dir_geos/makefile.vc
-rm -f $dir_geos/aclocal.m4
-rm -f $dir_geos/NEWS
-rm -f $dir_geos/TODO
-rm -f $dir_geos/COMMITERS*
-rm -f $dir_geos/PERFORMANCE*
-rm -f $dir_geos/PROVENANCE*
-rm -f $dir_geos/MIGRATION_GUIDE*
-rm -f $dir_geos/HOWTO-RELEASE*
-
 #
 # apply patches
 #
