@@ -47,14 +47,28 @@
 				"../gdal/frmts/pcidsk/sdk/channel/cexternalchannel.cpp",
 				"../gdal/frmts/pcidsk/sdk/channel/ctiledchannel.cpp",
 				"../gdal/frmts/pcidsk/sdk/channel/cpcidskchannel.cpp",
-				"../gdal/frmts/pcidsk/sdk/port/win32_mutex.cpp",
 				"../gdal/frmts/pcidsk/sdk/port/io_stdio.cpp",
-				"../gdal/frmts/pcidsk/sdk/port/pthread_mutex.cpp",
-				"../gdal/frmts/pcidsk/sdk/port/io_win32.cpp",
 				"../gdal/frmts/pcidsk/vsi_pcidsk_io.cpp"
 			],
+			"conditions": [
+				["OS == 'win'", {
+					"sources": [
+						"../gdal/frmts/pcidsk/sdk/port/io_win32.cpp",
+						"../gdal/frmts/pcidsk/sdk/port/win32_mutex.cpp"
+					]
+				}, {
+					"sources": [
+						"../gdal/frmts/pcidsk/sdk/port/pthread_mutex.cpp"
+					]
+				}]
+			],
 			"include_dirs": [
-				"../gdal/frmts/pcidsk"
+				"../gdal/frmts/pcidsk",
+				"../gdal/frmts/pcidsk/sdk",
+				"../gdal/frmts/pcidsk/sdk/channel",
+				"../gdal/frmts/pcidsk/sdk/core",
+				"../gdal/frmts/pcidsk/sdk/port",
+				"../gdal/frmts/pcidsk/sdk/segment",
 			]
 		}
 	]
