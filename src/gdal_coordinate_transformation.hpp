@@ -54,6 +54,15 @@ public:
     virtual OGRSpatialReference* GetSourceCS() override { return nullptr; }
     virtual OGRSpatialReference* GetTargetCS() override { return nullptr; }
 
+		// only used on GDAL 2.X
+		virtual int TransformEx( int nCount,
+                             double *x, double *y, double *z = NULL,
+                             int *pabSuccess = NULL ) {
+        return GDALGenImgProjTransform( hSrcImageTransformer, TRUE,
+                                        nCount, x, y, z, pabSuccess );
+    }
+
+		// GDAL 3.x below
     virtual int Transform(int nCount,
         double* x, double* y, double* z = NULL)
     {
@@ -76,7 +85,7 @@ public:
 
     virtual int Transform(int nCount,
         double* x, double* y, double* z, double* /* t */,
-        int* pabSuccess) override
+        int* pabSuccess)
     {
         return GDALGenImgProjTransform(hSrcImageTransformer, TRUE,
             nCount, x, y, z, pabSuccess);

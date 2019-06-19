@@ -27,7 +27,9 @@
 				"../gdal/frmts/png/libpng/pngset.c"
 			],
 			"include_dirs": [
-				"../gdal/frmts/png"
+				"../gdal/frmts/png",
+				"../gdal/frmts/png/libpng",
+				"../gdal/frmts/zlib"
 			]
 		}
 	]

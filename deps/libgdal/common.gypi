@@ -25,8 +25,7 @@
 			"./gdal/ogr/ogrsf_frmts/avc",
 			"./gdal/ogr/ogrsf_frmts/vrt",
 			"./gdal/ogr/ogrsf_frmts/geojson",
-			"./gdal/ogr/ogrsf_frmts/geojson/libjson",
-			"./gdal/frmts/jpeg/libjpeg"
+			"./gdal/ogr/ogrsf_frmts/geojson/libjson"
 		],
 		"defines": [
 			"_LARGEFILE_SOURCE",

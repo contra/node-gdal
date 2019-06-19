@@ -63,12 +63,10 @@
 				}]
 			],
 			"include_dirs": [
+				"../gdal/frmts/jpeg/libjpeg",
+				"../gdal/frmts/raw",
 				"../gdal/frmts/pcidsk",
-				"../gdal/frmts/pcidsk/sdk",
-				"../gdal/frmts/pcidsk/sdk/channel",
-				"../gdal/frmts/pcidsk/sdk/core",
-				"../gdal/frmts/pcidsk/sdk/port",
-				"../gdal/frmts/pcidsk/sdk/segment",
+				"../gdal/frmts/pcidsk/sdk"
 			]
 		}
 	]

@@ -59,7 +59,8 @@
 				"../gdal/frmts/jpeg/vsidataio.cpp"
 			],
 			"include_dirs": [
-				"../gdal/frmts/jpeg"
+				"../gdal/frmts/jpeg",
+				"../gdal/frmts/jpeg/libjpeg"
 			]
 		}
 	]

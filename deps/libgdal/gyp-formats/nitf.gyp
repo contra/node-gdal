@@ -24,7 +24,9 @@
 				"../gdal/frmts/nitf/nitfbilevel.cpp"
 			],
 			"include_dirs": [
-				"../gdal/frmts/nitf"
+				"../gdal/frmts/nitf",
+				"../gdal/frmts/vrt",
+				"../gdal/frmts/gtiff/libtiff"
 			]
 		}
 	]

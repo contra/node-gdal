@@ -20,7 +20,8 @@
 				"../gdal/frmts/vrt/vrtrawrasterband.cpp"
 			],
 			"include_dirs": [
-				"../gdal/frmts/vrt"
+				"../gdal/frmts/vrt",
+				"../gdal/frmts/raw"
 			]
 		}
 	]

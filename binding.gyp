@@ -95,8 +95,6 @@
 								"deps/libgdal/arch/win",
 								"deps/libgdal/gdal",
 								"deps/libgdal/gdal/alg",
-								"deps/libgdal/gdal/marching_squares",
-								"deps/libgdal/gdal/internal_libqhull",
 								"deps/libgdal/gdal/gcore",
 								"deps/libgdal/gdal/port",
 								"deps/libgdal/gdal/bridge",

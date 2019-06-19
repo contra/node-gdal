@@ -17,7 +17,8 @@
 				"../gdal/frmts/pds/pds4dataset.cpp"
 			],
 			"include_dirs": [
-				"../gdal/frmts/pds"
+				"../gdal/frmts/pds",
+				"../gdal/frmts/raw"
 			]
 		}
 	]
