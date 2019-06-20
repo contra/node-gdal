@@ -26,6 +26,9 @@
 					"include_dirs": ["./arch/unix/src"]
 				}]
 			],
+			"dependencies": [
+				"../libsqlite/libsqlite.gyp:libsqlite"
+			],
 			"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
 			"cflags!": ["-fno-rtti", "-fno-exceptions"],
 			"xcode_settings": {
