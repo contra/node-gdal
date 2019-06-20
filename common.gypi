@@ -36,6 +36,11 @@
 				}
 			}]
 		],
+		"link_settings": {
+			"ldflags": [
+				"-Wl,-z,defs", "-Wl,-s"
+			],
+		},
 		"configurations": {
 			"Debug": {
 				"cflags_cc!": ["-O3", "-Os", "-DNDEBUG"],
@@ -59,9 +64,6 @@
 					"DEAD_CODE_STRIPPING": "YES",
 					"GCC_INLINES_ARE_PRIVATE_EXTERN": "YES"
 				},
-				"ldflags": [
-					"-Wl,-s"
-				],
 				"msvs_settings": {
 					"VCCLCompilerTool": {
 						#"Optimization": 0, # 0:/Od disable, 1:/O1 min size, 2:/O2 max speed, 3:/Ox full optimization

@@ -1193,4 +1193,4 @@ namespace node_gdal {
 
 } // namespace node_gdal
 
-NODE_MODULE(gdal, node_gdal::Init)
+NODE_MODULE(NODE_GYP_MODULE_NAME, node_gdal::Init)
