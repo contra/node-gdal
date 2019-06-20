@@ -35,11 +35,13 @@
 				"GCC_ENABLE_CPP_RTTI": "YES",
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES"
 			},
+			"defines": [
+			  'PROJ_LIB="<(deps_dir)/libproj/proj/data"'
+			],
 			"direct_dependent_settings": {
 				"include_dirs": [
 					"./proj/src"
 				],
-				"defines": [],
 				"conditions": [
 					["OS == 'win'", {
 						"include_dirs": ["./arch/win"]

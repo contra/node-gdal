@@ -29,3 +29,8 @@ mv proj-${PROJ_VERSION} $dir_proj
 mv $dir_proj/src/apps/utils.cpp $dir_proj/src/apps/utils_apps.cpp
 mv $dir_proj/src/conversions/geocent.cpp $dir_proj/src/conversions/geocent_conversions.cpp
 mv $dir_proj/src/iso19111/internal.cpp $dir_proj/src/iso19111/internal_iso19111.cpp
+
+# build proj.db
+cd $dir_proj/data
+../configure
+make proj.db

@@ -164,7 +164,6 @@ deps/libproj/proj/install*
 deps/libproj/proj/test-driver
 deps/libproj/proj/test
 deps/libproj/proj/m4
-deps/libproj/proj/data/sql
 deps/libproj/proj/mkinstalldirs
 deps/libproj/proj/**/*.sh
 deps/libproj/proj/**/*.opt
@@ -179,6 +178,8 @@ deps/libproj/proj/compile
 deps/libproj/proj/nad/test*
 deps/libproj/proj/nad/makefile*
 deps/libproj/proj/nad/*_out*
+deps/libproj/proj/data/*
+!deps/libproj/proj/data/proj.db
 
 deps/libsqlite/sqlite/*.m4
 deps/libsqlite/sqlite/compile

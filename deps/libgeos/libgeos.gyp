@@ -328,7 +328,6 @@
 					"./geos/include",
 					"./geos/capi"
 				],
-				"defines": [],
 				"conditions": [
 					["OS == 'win'", {
 						"include_dirs": ["./arch/win"]
