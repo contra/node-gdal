@@ -38,8 +38,8 @@
 		],
 		"link_settings": {
 			"ldflags": [
-				"-Wl,-z,defs", "-Wl,-s"
-			],
+				"-Wl,-z,defs"
+			]
 		},
 		"configurations": {
 			"Debug": {
