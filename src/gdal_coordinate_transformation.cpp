@@ -208,7 +208,7 @@ NAN_METHOD(CoordinateTransformation::transformPoint)
 		NODE_ARG_DOUBLE_OPT(2, "z", z);
 	}
 
-	if (!transform->this_->Transform(1, &x, &y, &z)) {
+	if (!transform->this_->TransformEx(1, &x, &y, &z)) {
 		Nan::ThrowError("Error transforming point");
 		return;
 	}
