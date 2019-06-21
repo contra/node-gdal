@@ -178,7 +178,10 @@ deps/libproj/proj/compile
 deps/libproj/proj/nad/test*
 deps/libproj/proj/nad/makefile*
 deps/libproj/proj/nad/*_out*
-deps/libproj/proj/data/*
+deps/libproj/proj/data/*.*
+deps/libproj/proj/data/*/
+deps/libproj/proj/data/Makefile
+deps/libproj/proj/data/libtool
 !deps/libproj/proj/data/proj.db
 
 deps/libsqlite/sqlite/*.m4

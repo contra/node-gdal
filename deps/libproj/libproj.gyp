@@ -29,15 +29,15 @@
 			"dependencies": [
 				"../libsqlite/libsqlite.gyp:libsqlite"
 			],
+			"defines": [
+			  'PROJ_LIB="<(module_path)/../../../deps/libproj/proj/data"'
+			],
 			"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
 			"cflags!": ["-fno-rtti", "-fno-exceptions"],
 			"xcode_settings": {
 				"GCC_ENABLE_CPP_RTTI": "YES",
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES"
 			},
-			"defines": [
-			  'PROJ_LIB="<(deps_dir)/libproj/proj/data"'
-			],
 			"direct_dependent_settings": {
 				"include_dirs": [
 					"./proj/src"
