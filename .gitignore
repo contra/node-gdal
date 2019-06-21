@@ -183,6 +183,8 @@ deps/libproj/proj/data/*/
 deps/libproj/proj/data/Makefile
 deps/libproj/proj/data/libtool
 !deps/libproj/proj/data/proj.db
+!deps/libproj/proj/data/nad.lst
+!deps/libproj/proj/data/other.extra
 
 deps/libsqlite/sqlite/*.m4
 deps/libsqlite/sqlite/compile
