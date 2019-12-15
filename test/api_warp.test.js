@@ -20,7 +20,7 @@ describe('gdal', function() {
 
 			// warp options
 			var s_srs = src.srs;
-			var t_srs = gdal.SpatialReference.fromUserInput('EPSG:4326');
+			var t_srs = gdal.SpatialReference.fromProj4('+init=epsg:4326');
 			var tx = new gdal.CoordinateTransformation(s_srs, t_srs);
 
 			// compute output extent
@@ -110,7 +110,7 @@ describe('gdal', function() {
 
 			// warp options
 			var s_srs = src.srs;
-			var t_srs = gdal.SpatialReference.fromUserInput('EPSG:4326');
+			var t_srs = gdal.SpatialReference.fromProj4('+init=epsg:4326');
 			var tr = {x: 0.0005, y: 0.0005}; // target resolution
 			var tx = new gdal.CoordinateTransformation(s_srs, t_srs);
 			var cutline = cutline_ds.layers.get(0).features.get(0).getGeometry();
