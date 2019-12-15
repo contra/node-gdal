@@ -28,6 +28,7 @@
 			],
 			"defines": [
 				"XML_STATIC=1",
+				"XML_POOR_ENTROPY=1",
 				"HAVE_EXPAT_CONFIG_H=1",
 				"CPU_<(endianness)_ENDIAN=1"
 			],
@@ -43,6 +44,7 @@
 				],
 				"defines": [
 					"XML_STATIC=1",
+					"XML_POOR_ENTROPY=1",
 					"HAVE_EXPAT_CONFIG_H=1",
 				],
 				"conditions": [

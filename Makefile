@@ -1,6 +1,6 @@
 .PHONY: clean clean-test build rebuild release test test-concurrent test-syntax authors
 
-MOCHA_ARGS=test -R list -gc --require ./test/_common.js
+MOCHA_ARGS=test -R list --expose-gc --require ./test/_common.js
 
 all: build
 
@@ -67,7 +67,6 @@ else
 	make test
 	@make authors
 	sed -i.bak 's/"version": "[^"]*"/"version": "$(version)"/' package.json
-	sed -i.bak 's/"version": "[^"]*"/"version": "$(version)"/' package-lock.json
 	sed -i.bak 's/"version": "[^"]*"/"version": "$(version)"/' yuidoc.json
 	rm *.bak
 	git add .
