@@ -27,11 +27,11 @@ clean-test:
 
 build: ./node_modules/.bin/node-pre-gyp
 	./node_modules/.bin/node-pre-gyp configure --enable-logging=true
-	./node_modules/.bin/node-pre-gyp build
+	./node_modules/.bin/node-pre-gyp rebuild
 
 build-shared: ./node_modules/.bin/node-pre-gyp
 	./node_modules/.bin/node-pre-gyp configure --enable-logging=true --shared_gdal=true
-	./node_modules/.bin/node-pre-gyp build
+	./node_modules/.bin/node-pre-gyp rebuild
 
 rebuild:
 	@make clean
