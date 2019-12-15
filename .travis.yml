@@ -10,6 +10,7 @@ addons:
     packages:
     - g++-4.8
     - libc6-dev # for libiconv which is needed by libgdal
+    - unixodbc-dev
 
 matrix:
   include:

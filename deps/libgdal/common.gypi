@@ -47,8 +47,6 @@
 			"<(deps_dir)/libproj/libproj.gyp:libproj",
 			"<(deps_dir)/libsqlite/libsqlite.gyp:libsqlite"
 		],
-		"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
-		"cflags!": ["-fno-rtti", "-fno-exceptions"],
 		"conditions": [
 			["OS == 'win'", {
 				"include_dirs": ["./arch/win"],

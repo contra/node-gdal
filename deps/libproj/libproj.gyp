@@ -33,8 +33,6 @@
 			  'PROJ_LIB="<(module_path)/../../../deps/libproj/proj/data"',
 			  'PROJ_USE_PROJ4_INIT_RULES="YES"'
 			],
-			"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
-			"cflags!": ["-fno-rtti", "-fno-exceptions"],
 			"xcode_settings": {
 				"GCC_ENABLE_CPP_RTTI": "YES",
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES"

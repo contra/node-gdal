@@ -10,11 +10,7 @@
 			"target_name": "libexpat",
 			"type": "static_library",
 			"sources": [
-				"expat/lib/xmlparse.c",
-				"expat/lib/xmlrole.c",
-				"expat/lib/xmltok.c",
-				"expat/lib/xmltok_impl.c",
-				"expat/lib/xmltok_ns.c"
+				'<!@(python ../glob-files.py "expat/lib/*.c")'
 			],
 			"include_dirs": [
 				"./expat/lib"
@@ -32,8 +28,6 @@
 				"HAVE_EXPAT_CONFIG_H=1",
 				"CPU_<(endianness)_ENDIAN=1"
 			],
-			"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
-			"cflags!": ["-fno-rtti", "-fno-exceptions"],
 			"xcode_settings": {
 				"GCC_ENABLE_CPP_RTTI": "YES",
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES"

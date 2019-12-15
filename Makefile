@@ -26,12 +26,12 @@ clean-test:
 	npm install node-pre-gyp
 
 build: ./node_modules/.bin/node-pre-gyp
-	./node_modules/.bin/node-pre-gyp configure --enable-logging=true
-	./node_modules/.bin/node-pre-gyp build
+	./node_modules/.bin/node-pre-gyp configure --silent
+	./node_modules/.bin/node-pre-gyp build -j max
 
 build-shared: ./node_modules/.bin/node-pre-gyp
-	./node_modules/.bin/node-pre-gyp configure --enable-logging=true --shared_gdal=true
-	./node_modules/.bin/node-pre-gyp build
+	./node_modules/.bin/node-pre-gyp configure --shared_gdal=true --silent
+	./node_modules/.bin/node-pre-gyp build -j max
 
 rebuild:
 	@make clean
