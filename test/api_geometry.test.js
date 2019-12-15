@@ -1,6 +1,6 @@
 var gdal = require('../lib/gdal.js');
 var assert = require('chai').assert;
-var WGS84 = 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]';
+var WGS84 = 'GEOGCS["WGS_84",DATUM["WGS_1984",SPHEROID["WGS_84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433],AXIS["Longitude",EAST],AXIS["Latitude",NORTH]]';
 
 describe('gdal.Geometry', function() {
 	afterEach(gc);

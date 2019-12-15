@@ -9,11 +9,7 @@
 			"sources": [
 				'<!@(python ../glob-files.py "proj/src/*.c")',
 				'<!@(python ../glob-files.py "proj/src/*.cpp")',
-				'<!@(python ../glob-files.py "proj/src/transformations/*.cpp")',
-				'<!@(python ../glob-files.py "proj/src/apps/*.cpp")',
-				'<!@(python ../glob-files.py "proj/src/projections/*.cpp")',
-				'<!@(python ../glob-files.py "proj/src/conversions/*.cpp")',
-				'<!@(python ../glob-files.py "proj/src/iso19111/*.cpp")'
+				'<!@(python ../glob-files.py "proj/src/*/*.cpp")'
 			],
 			"include_dirs": [
 				"./proj/src",
@@ -30,8 +26,7 @@
 				"../libsqlite/libsqlite.gyp:libsqlite"
 			],
 			"defines": [
-			  'PROJ_LIB="<(module_path)/../../../deps/libproj/proj/data"',
-			  'PROJ_USE_PROJ4_INIT_RULES="YES"'
+			  'PROJ_LIB="<(module_path)/../../../deps/libproj/proj/data"'
 			],
 			"xcode_settings": {
 				"GCC_ENABLE_CPP_RTTI": "YES",
