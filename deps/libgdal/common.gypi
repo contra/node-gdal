@@ -75,14 +75,6 @@
 				"dependencies": [
 					"<(deps_dir)/libgeos/libgeos.gyp:libgeos"
 				]
-			}, {
-				"libraries": ["<!@(geos-config --libs)"],
-				"cflags_cc": ["<!@(geos-config --cflags)"],
-				"xcode_settings": {
-					"OTHER_CPLUSPLUSFLAGS":[
-						"<!@(geos-config --cflags)"
-					]
-				}
 			}]
 		],
 	}

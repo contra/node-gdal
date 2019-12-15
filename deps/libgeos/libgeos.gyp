@@ -309,15 +309,30 @@
 				"./geos/include",
 				"./geos/capi"
 			],
+			"defines": [
+				"USE_UNSTABLE_GEOS_CPP_API"
+			],
 			"conditions": [
 				["OS == 'win'", {
 					"include_dirs": ["./arch/win"],
-					"defines": [ 'NOMINMAX' ]
+					"defines": [ "NOMINMAX" ]
 				}, {
 					"include_dirs": ["./arch/unix"]
 				}]
 			],
-			"cflags_cc!": ["-fno-rtti", "-fno-exceptions"],
+			"libraries": ["<!@(geos-config --libs)"],
+			"link_settings": {
+				"ldflags": [
+					"<!@(geos-config --ldflags)",
+					"-lgeos_c"
+				]
+			},
+			"xcode_settings": {
+				"OTHER_CPLUSPLUSFLAGS":[
+					"<!@(geos-config --cflags)"
+				]
+			},
+			"cflags_cc!": ["-fno-rtti", "-fno-exceptions", "<!@(geos-config --cflags)"],
 			"cflags!": ["-fno-rtti", "-fno-exceptions"],
 			"xcode_settings": {
 				"GCC_ENABLE_CPP_RTTI": "YES",
