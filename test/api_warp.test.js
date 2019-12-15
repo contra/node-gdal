@@ -478,7 +478,7 @@ describe('gdal', function() {
 
 				assert.throws(function() {
 					gdal.suggestedWarpOutput(options);
-				}, 'Mercator_1SP with scale != 1.0 and latitude of origin != 0, not supported by PROJ.4.');
+				}, /Cannot find coordinate operations from/);
 			});
 		} else {
 			it.skip('should throw error if GDAL can\'t create transformer', function() {});
