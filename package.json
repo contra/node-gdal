@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "nan": "^2.14.0",
-    "node-pre-gyp": "^0.13.0"
+    "node-pre-gyp": "^0.14.0"
   },
   "bundledDependencies": [
     "node-pre-gyp"
@@ -58,7 +58,7 @@
     "eslint-config-naturalatlas": "~1.0.1",
     "gh-pages": "~0.2.0",
     "mocha": "^6.0.0",
-    "node-gyp": "^5.0.0",
+    "node-gyp": "^6.0.0",
     "yuidoc-lucid-theme": "~0.1.2",
     "yuidocjs": "~0.3.50"
   },
